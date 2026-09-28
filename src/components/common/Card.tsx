@@ -1,0 +1,63 @@
+import { forwardRef, useEffect } from 'react';
+import { StyleSheet, View, type ViewProps } from 'react-native';
+import Animated, {
+  useAnimatedStyle,
+  useSharedValue,
+  withDelay,
+  withSequence,
+  withTiming,
+} from 'react-native-reanimated';
+
+import { duration, timing } from '@/config/motion';
+import { colors } from '@/styles/colors';
+import { radius, spacing } from '@/styles/tokens';
+
+type Props = ViewProps & {
+  /**
+   * Changes whenever the demo panel jumps to this section. A new value pulses a
+   * teal ring so it is obvious where you landed.
+   */
+  highlightKey?: number | null;
+};
+
+const Card = forwardRef<View, Props>(({ style, highlightKey, children, ...rest }, ref) => {
+  const glow = useSharedValue(0);
+
+  useEffect(() => {
+    if (!highlightKey) return;
+    glow.set(
+      withSequence(
+        withTiming(1, timing(duration.fast)),
+        withDelay(400, withTiming(0, timing(duration.slow))),
+      ),
+    );
+  }, [highlightKey, glow]);
+
+  const ring = useAnimatedStyle(() => ({
+    borderColor: glow.get() > 0.5 ? colors.teal : colors.line,
+    shadowOpacity: glow.get() * 0.5,
+  }));
+
+  return (
+    <Animated.View ref={ref} {...rest} style={[styles.card, ring, style]}>
+      {children}
+    </Animated.View>
+  );
+});
+
+Card.displayName = 'Card';
+export default Card;
+
+const styles = StyleSheet.create({
+  card: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.card,
+    borderWidth: 1,
+    borderColor: colors.line,
+    padding: spacing.card,
+    shadowColor: colors.teal,
+    shadowOpacity: 0,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+  },
+});

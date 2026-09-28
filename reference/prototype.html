@@ -1,0 +1,1659 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1,viewport-fit=cover"><style>:root{color-scheme:light;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}html{scroll-padding-top:env(safe-area-inset-top,0px)}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#faf9f5;color:#141413}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<title>Skillio Prototype</title>
+<meta name="description" content="Interactive Skillio mobile prototype: onboarding, personalised Home and every edge state.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..800&family=Figtree:ital,wght@0,400..800;1,500&display=swap">
+<style>
+:root{
+  /* stage (the page around the phone) */
+  --stage-bg:#E3F1F3; --stage-bg-2:#D3EAEE; --stage-ink:#0C2A33; --stage-muted:#4B6A71; --stage-card:#FFFFFF; --stage-line:#CBE1E5; --stage-chip:#EEF7F8;
+  /* app palette (the product itself is light) */
+  --teal:#08A4B3; --teal-600:#07909E; --teal-700:#056E79; --teal-50:#ECF8F9; --teal-100:#CDEEF1; --teal-200:#9EDDE3;
+  --ink:#0C2A33; --ink-2:#48656C; --ink-3:#8AA3A9; --line:#E2EDEF; --bg:#F3F8F9; --surface:#FFFFFF;
+  --sun:#FFC23D; --sun-50:#FFF6DD; --sun-ink:#8A5B00;
+  --flame:#FF7A45; --flame-50:#FFEFE7;
+  --mint:#23B37F; --mint-50:#E3F7EE;
+  --berry:#EE4F72; --berry-50:#FDEBEF;
+  --violet:#7566F0; --violet-50:#EFEDFE;
+  --amber:#F29A1F; --amber-50:#FEF3E2;
+  --display:"Bricolage Grotesque", "Figtree", ui-rounded, system-ui, sans-serif;
+  --body:"Figtree", ui-rounded, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --ease-out:cubic-bezier(.22,1,.36,1);
+  --ease-spring:cubic-bezier(.34,1.56,.64,1);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){ color-scheme:dark;
+    --stage-bg:#061A20; --stage-bg-2:#0A262E; --stage-ink:#E4F3F5; --stage-muted:#8DAEB4; --stage-card:#0D2830; --stage-line:#1B3F48; --stage-chip:#12333C; }
+}
+:root[data-theme="dark"]{ color-scheme:dark;
+  --stage-bg:#061A20; --stage-bg-2:#0A262E; --stage-ink:#E4F3F5; --stage-muted:#8DAEB4; --stage-card:#0D2830; --stage-line:#1B3F48; --stage-chip:#12333C; }
+
+html,body{height:100%}
+body{background:radial-gradient(1200px 700px at 70% 10%, var(--stage-bg-2), var(--stage-bg) 60%); background-color:var(--stage-bg); color:var(--stage-ink); font-family:var(--body); -webkit-font-smoothing:antialiased; overflow:hidden}
+#root{height:100%}
+button{font:inherit; color:inherit; border:0; background:none; cursor:pointer; -webkit-tap-highlight-color:transparent}
+button:focus-visible, input:focus-visible, [tabindex]:focus-visible{outline:3px solid var(--teal); outline-offset:2px}
+*{box-sizing:border-box}
+
+/* ---------- stage ---------- */
+.stage{height:100%; display:flex; align-items:center; justify-content:center; gap:56px; padding-inline:24px; padding-block:20px}
+.panel{width:340px; max-height:100%; overflow:auto; display:flex; flex-direction:column; gap:18px; scrollbar-width:thin; padding-right:4px}
+.p-brand{display:flex; flex-direction:column; gap:8px}
+.p-brand h1{font-family:var(--display); font-size:30px; line-height:1.05; letter-spacing:-.02em; margin:0; text-wrap:balance}
+.p-brand p{margin:0; color:var(--stage-muted); line-height:1.5; font-size:14px}
+.p-card{background:var(--stage-card); border:1px solid var(--stage-line); border-radius:18px; padding:14px; display:flex; flex-direction:column; gap:10px}
+.p-label{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; color:var(--stage-muted)}
+.p-row{display:flex; gap:8px; flex-wrap:wrap}
+.p-btn{flex:1; min-width:0; padding:9px 10px; border-radius:11px; background:var(--stage-chip); border:1px solid var(--stage-line); font-weight:700; font-size:13px; color:var(--stage-ink); transition:transform .15s, background .2s, border-color .2s}
+.p-btn:active{transform:scale(.97)}
+.p-btn.on{background:var(--teal); border-color:var(--teal); color:#fff}
+.p-states{display:flex; flex-direction:column; gap:4px; margin:0; padding:0; list-style:none; counter-reset:st}
+.p-state{display:flex; align-items:center; gap:10px; width:100%; text-align:left; padding:8px 8px; border-radius:10px; font-weight:600; font-size:14px; color:var(--stage-ink); transition:background .2s}
+.p-state:hover{background:var(--stage-chip)}
+.p-state .n{width:22px; height:22px; border-radius:7px; display:grid; place-items:center; background:var(--stage-chip); border:1px solid var(--stage-line); font-size:11px; font-weight:800; color:var(--stage-muted); flex:none; font-variant-numeric:tabular-nums}
+.p-state.on{background:var(--stage-chip)}
+.p-state.on .n{background:var(--teal); color:#fff; border-color:var(--teal)}
+.p-toggle{display:grid; grid-template-columns:92px 1fr; align-items:center; gap:8px; font-size:13px; font-weight:600; color:var(--stage-muted)}
+.seg{display:flex; background:var(--stage-chip); border:1px solid var(--stage-line); border-radius:10px; padding:2px}
+.seg button{flex:1; padding:6px 4px; border-radius:8px; font-size:12px; font-weight:700; color:var(--stage-muted); transition:background .2s, color .2s}
+.seg button.on{background:var(--stage-card); color:var(--stage-ink); box-shadow:0 1px 3px rgba(0,0,0,.12)}
+.p-tabs{display:flex; gap:6px}
+.p-tabs button{font-size:12px; font-weight:800; padding:6px 10px; border-radius:999px; color:var(--stage-muted)}
+.p-tabs button.on{background:var(--stage-chip); color:var(--stage-ink)}
+.json{margin:0; font:12px/1.55 ui-monospace, "SF Mono", Menlo, Consolas, monospace; background:#0C2A33; color:#CFEFF2; border-radius:12px; padding:12px; overflow:auto; max-height:260px; white-space:pre}
+.json .k{color:#7FDCE5} .json .s{color:#FFD27A} .json .nm{color:#9FF0C6} .json .nl{color:#FF9DB3}
+.added{margin:0; padding:0; list-style:none; display:flex; flex-direction:column; gap:10px; font-size:13px; line-height:1.45}
+.added b{display:block; font-size:12px; font-family:ui-monospace, Menlo, monospace; color:var(--teal)}
+.added span{color:var(--stage-muted)}
+
+/* ---------- phone ---------- */
+.phone-wrap{flex:none; width:calc(412px * var(--s,1)); height:calc(866px * var(--s,1)); position:relative}
+.phone{position:absolute; left:0; top:0; width:412px; height:866px; transform:scale(var(--s,1)); transform-origin:0 0; border-radius:60px; background:#0B1F25; padding:11px; box-shadow:0 0 0 2px #24414A inset, 0 40px 80px -30px rgba(6,40,48,.55), 0 18px 36px -18px rgba(6,40,48,.4)}
+.screen{position:relative; width:390px; height:844px; border-radius:49px; overflow:hidden; background:var(--bg); color:var(--ink); isolation:isolate}
+.island{position:absolute; top:11px; left:50%; transform:translateX(-50%); width:122px; height:35px; border-radius:20px; background:#000; z-index:60}
+.statusbar{position:absolute; top:0; left:0; right:0; height:52px; display:flex; align-items:center; justify-content:space-between; padding:6px 34px 0 42px; font-weight:700; font-size:16px; z-index:55; pointer-events:none; color:var(--ink); transition:color .3s}
+.statusbar.light{color:#fff}
+.statusbar .sb-r{display:flex; gap:6px; align-items:center}
+.homebar{position:absolute; bottom:8px; left:50%; transform:translateX(-50%); width:134px; height:5px; border-radius:3px; background:var(--ink); opacity:.85; z-index:60; pointer-events:none; transition:background .3s}
+.homebar.light{background:#fff}
+.bleed .stage{padding:0; gap:0; display:block}
+.bleed .phone-wrap{width:100%; height:100%}
+.bleed .phone{position:relative; transform:none; width:100%; height:100%; border-radius:0; padding:0; box-shadow:none; background:var(--bg)}
+.bleed .screen{width:100%; height:100%; border-radius:0}
+.top-pad{height:54px; flex:none}
+.bleed .top-pad{height:12px}
+
+/* ---------- screens + transitions ---------- */
+.scr{position:absolute; inset:0; display:flex; flex-direction:column; background:var(--bg)}
+.enter-fwd{animation:inFwd .44s var(--ease-out) both}
+.enter-back{animation:inBack .44s var(--ease-out) both}
+.enter-pop{animation:inPop .5s var(--ease-out) both}
+@keyframes inFwd{from{transform:translateX(38px); opacity:0}to{transform:none; opacity:1}}
+@keyframes inBack{from{transform:translateX(-38px); opacity:0}to{transform:none; opacity:1}}
+@keyframes inPop{from{transform:scale(1.04); opacity:0}to{transform:none; opacity:1}}
+.stagger > *{animation:rise .55s var(--ease-out) both}
+.stagger > *:nth-child(1){animation-delay:.04s}.stagger > *:nth-child(2){animation-delay:.09s}.stagger > *:nth-child(3){animation-delay:.14s}.stagger > *:nth-child(4){animation-delay:.19s}.stagger > *:nth-child(5){animation-delay:.24s}.stagger > *:nth-child(6){animation-delay:.29s}.stagger > *:nth-child(7){animation-delay:.34s}.stagger > *:nth-child(8){animation-delay:.39s}
+@keyframes rise{from{transform:translateY(14px); opacity:0}to{transform:none; opacity:1}}
+.scroll{flex:1; overflow-y:auto; overflow-x:hidden; scroll-behavior:smooth; scrollbar-width:none; overscroll-behavior:contain}
+.scroll::-webkit-scrollbar{display:none}
+
+/* ---------- type ---------- */
+.h1{font-family:var(--display); font-weight:800; font-size:30px; line-height:1.08; letter-spacing:-.025em; margin:0; text-wrap:balance}
+.h2{font-family:var(--display); font-weight:700; font-size:20px; line-height:1.15; letter-spacing:-.015em; margin:0}
+.sub{color:var(--ink-2); font-size:15.5px; line-height:1.45; margin:0}
+.eyebrow{font-size:11.5px; font-weight:800; letter-spacing:.11em; text-transform:uppercase; color:var(--ink-3)}
+.num{font-family:var(--display); font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+
+/* ---------- buttons ---------- */
+.btn{position:relative; overflow:hidden; display:flex; align-items:center; justify-content:center; gap:8px; width:100%; height:56px; border-radius:18px; font-weight:800; font-size:15px; letter-spacing:.07em; text-transform:uppercase; transition:transform .16s var(--ease-out), box-shadow .2s, background .25s, color .25s, opacity .25s; user-select:none}
+.btn:active:not(:disabled){transform:scale(.965)}
+.btn-primary{background:linear-gradient(180deg,#12B3C2,#08A4B3 55%,#0799A7); color:#fff; box-shadow:0 12px 24px -12px rgba(8,164,179,.85), inset 0 1px 0 rgba(255,255,255,.28)}
+.btn-primary:active:not(:disabled){box-shadow:0 6px 14px -10px rgba(8,164,179,.9)}
+.btn-primary:disabled{background:#DAE8EB; color:#93ABB0; box-shadow:none; cursor:not-allowed}
+.btn-white{background:#fff; color:var(--teal-700); box-shadow:0 10px 22px -12px rgba(3,50,58,.55)}
+.btn-ink{background:var(--ink); color:#fff; box-shadow:0 10px 22px -14px rgba(12,42,51,.8)}
+.btn-tonal{background:var(--teal-50); color:var(--teal-700); height:48px; font-size:13.5px; border-radius:15px}
+.btn-tonal:hover{background:var(--teal-100)}
+.btn-ghost{color:var(--teal-700); height:48px; font-size:13.5px}
+.btn-sm{height:44px; font-size:13px; border-radius:14px}
+.ripple{position:absolute; border-radius:50%; background:currentColor; opacity:.25; transform:scale(0); animation:rip .6s var(--ease-out) forwards; pointer-events:none}
+@keyframes rip{to{transform:scale(1); opacity:0}}
+.icon-btn{width:42px; height:42px; border-radius:14px; display:grid; place-items:center; background:var(--surface); border:1px solid var(--line); color:var(--ink); transition:transform .15s var(--ease-out); position:relative}
+.icon-btn:active{transform:scale(.9)}
+
+/* ---------- onboarding ---------- */
+.onb-head{display:flex; align-items:center; gap:14px; padding:6px 20px 4px}
+.onb-bar{flex:1; height:10px; border-radius:6px; background:#DFEBED; overflow:hidden}
+.onb-bar i{display:block; height:100%; border-radius:6px; background:linear-gradient(90deg,#34C6D3,#08A4B3); transition:width .6s var(--ease-out); position:relative}
+.onb-bar i::after{content:""; position:absolute; top:2px; left:6px; right:6px; height:3px; border-radius:2px; background:rgba(255,255,255,.35)}
+.onb-count{font-size:13px; font-weight:800; color:var(--ink-3); font-variant-numeric:tabular-nums; min-width:28px; text-align:right}
+.onb-body{padding:18px 20px 24px; display:flex; flex-direction:column; gap:20px}
+.onb-foot{padding:14px 20px 30px; background:linear-gradient(180deg, rgba(243,248,249,0), var(--bg) 30%); position:relative; z-index:2}
+.bleed .onb-foot{padding-bottom:20px}
+.opts{display:flex; flex-direction:column; gap:10px}
+.opt{display:flex; align-items:center; gap:14px; width:100%; text-align:left; padding:13px 14px; background:var(--surface); border:2px solid var(--line); border-radius:20px; transition:border-color .22s, background .22s, transform .18s var(--ease-out), box-shadow .22s}
+.opt:active{transform:scale(.975)}
+.opt.sel{border-color:var(--teal); background:#F1FBFC; box-shadow:0 8px 20px -14px rgba(8,164,179,.9)}
+.opt .ic{width:44px; height:44px; border-radius:14px; display:grid; place-items:center; flex:none; transition:transform .35s var(--ease-spring)}
+.opt.sel .ic{transform:scale(1.08) rotate(-4deg)}
+.opt .tx{flex:1; min-width:0; display:flex; flex-direction:column; gap:2px}
+.opt .tx b{font-size:16px; font-weight:750; letter-spacing:-.005em}
+.opt .tx span{font-size:13.5px; color:var(--ink-2); line-height:1.35}
+.tick{width:26px; height:26px; border-radius:50%; border:2px solid #CFDDE0; display:grid; place-items:center; flex:none; color:#fff; transition:all .25s var(--ease-spring)}
+.tick.sq{border-radius:8px}
+.sel .tick{background:var(--teal); border-color:var(--teal); animation:tickPop .38s var(--ease-spring)}
+.tick svg{opacity:0; transform:scale(.4); transition:all .25s var(--ease-spring)}
+.sel .tick svg{opacity:1; transform:none}
+@keyframes tickPop{0%{transform:scale(.6)}60%{transform:scale(1.18)}100%{transform:scale(1)}}
+.cefr{font-family:var(--display); font-weight:800; font-size:13px; padding:3px 8px; border-radius:8px; background:var(--teal-50); color:var(--teal-700); letter-spacing:.02em}
+.bars{display:flex; gap:3px; align-items:flex-end; height:22px}
+.bars i{width:5px; border-radius:2px; background:#D5E4E7; transition:background .3s}
+.bars i.on{background:var(--teal)}
+.hint{display:flex; gap:10px; align-items:flex-start; padding:12px 14px; border-radius:16px; background:var(--sun-50); color:#6E4A00; font-size:13.5px; line-height:1.4}
+.time-grid{display:grid; grid-template-columns:1fr 1fr; gap:12px}
+.time{position:relative; display:flex; flex-direction:column; align-items:flex-start; gap:2px; padding:18px 16px 16px; border-radius:22px; background:var(--surface); border:2px solid var(--line); text-align:left; transition:border-color .22s, background .22s, transform .18s var(--ease-out)}
+.time:active{transform:scale(.97)}
+.time.sel{border-color:var(--teal); background:#F1FBFC}
+.time .big{font-family:var(--display); font-size:44px; font-weight:800; line-height:1; letter-spacing:-.03em; transition:color .2s}
+.time.sel .big{color:var(--teal)}
+.time .unit{font-size:13px; font-weight:700; color:var(--ink-3)}
+.time .lab{margin-top:8px; font-weight:750; font-size:15px}
+.time .rec{position:absolute; top:12px; right:12px; font-size:10.5px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; background:var(--sun); color:#5A3B00; padding:3px 7px; border-radius:7px}
+.time .tick{position:absolute; bottom:14px; right:14px}
+.proj{display:flex; gap:12px; align-items:center; padding:14px 16px; border-radius:18px; background:var(--ink); color:#fff}
+.proj .num{font-size:26px; font-weight:800; color:#7FE1EA}
+.proj span{font-size:13.5px; color:#B9D4D8; line-height:1.35}
+.chips{display:flex; flex-wrap:wrap; gap:10px}
+.fchip{display:flex; align-items:center; gap:10px; padding:12px 16px 12px 12px; border-radius:18px; background:var(--surface); border:2px solid var(--line); font-weight:750; font-size:15.5px; transition:all .22s var(--ease-out)}
+.fchip:active{transform:scale(.95)}
+.fchip .ic{width:34px; height:34px; border-radius:11px; display:grid; place-items:center; transition:transform .35s var(--ease-spring)}
+.fchip.sel{border-color:var(--teal); background:#F1FBFC}
+.fchip.sel .ic{transform:rotate(-8deg) scale(1.1)}
+.fchip .tick{width:22px; height:22px}
+.name-field{position:relative}
+.name-input{width:100%; height:68px; border-radius:22px; border:2px solid var(--line); background:var(--surface); padding:0 20px; font-family:var(--display); font-size:26px; font-weight:700; color:var(--ink); outline:none; transition:border-color .2s, box-shadow .2s}
+.name-input:focus{border-color:var(--teal); box-shadow:0 0 0 5px rgba(8,164,179,.14)}
+.name-input::placeholder{color:#B4C7CB; font-weight:600}
+.name-count{position:absolute; right:18px; top:50%; transform:translateY(-50%); font-size:12px; font-weight:700; color:var(--ink-3)}
+.greet{display:flex; align-items:flex-end; gap:10px; min-height:112px}
+.bubble{background:var(--surface); border:1px solid var(--line); border-radius:20px 20px 20px 6px; padding:12px 16px; font-weight:700; font-size:16px; box-shadow:0 10px 24px -18px rgba(12,42,51,.5); animation:bubbleIn .45s var(--ease-spring) both; max-width:230px}
+@keyframes bubbleIn{from{transform:scale(.6) translateY(8px); opacity:0; transform-origin:0 100%}to{transform:none; opacity:1}}
+
+/* welcome */
+.welcome{background:radial-gradient(420px 360px at 50% 30%, #D8F3F6, rgba(216,243,246,0) 70%), var(--bg)}
+.logo{display:flex; align-items:center; gap:8px; font-family:var(--display); font-weight:800; font-size:24px; letter-spacing:-.03em; color:var(--ink)}
+.logo-mark{width:34px; height:34px}
+.hero-ill{position:relative; flex:1; min-height:300px; display:grid; place-items:center}
+.orbit{position:absolute; border-radius:50%; border:2px dashed rgba(8,164,179,.22)}
+.float-chip{position:absolute; display:flex; align-items:center; gap:6px; padding:8px 12px; border-radius:14px; background:#fff; box-shadow:0 12px 24px -14px rgba(12,42,51,.45); font-weight:800; font-size:14px; animation:floaty 5s ease-in-out infinite}
+@keyframes floaty{0%,100%{transform:translateY(0) rotate(var(--r,0deg))}50%{transform:translateY(-10px) rotate(var(--r,0deg))}}
+.mascot-float{animation:mfloat 4s ease-in-out infinite}
+@keyframes mfloat{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+.blink{animation:blink 4.5s infinite; transform-origin:center; transform-box:fill-box}
+@keyframes blink{0%,92%,100%{transform:scaleY(1)}95%{transform:scaleY(.1)}}
+
+/* plan */
+.plan-card{background:var(--surface); border-radius:26px; border:1px solid var(--line); overflow:hidden; box-shadow:0 18px 40px -30px rgba(12,42,51,.6)}
+.plan-top{padding:18px; background:linear-gradient(135deg,#0AAFBE,#067F8C); color:#fff; display:flex; align-items:center; gap:14px; position:relative; overflow:hidden}
+.plan-top::after{content:""; position:absolute; right:-40px; top:-60px; width:180px; height:180px; border-radius:50%; background:rgba(255,255,255,.08)}
+.plan-rows{display:flex; flex-direction:column}
+.plan-row{display:flex; align-items:center; gap:12px; padding:13px 18px; border-top:1px solid var(--line)}
+.plan-row:first-child{border-top:0}
+.plan-row .k{font-size:12.5px; font-weight:700; color:var(--ink-3); width:84px; flex:none}
+.plan-row .v{flex:1; font-weight:750; font-size:15px; display:flex; flex-wrap:wrap; gap:6px; align-items:center}
+.mini-chip{font-size:12.5px; font-weight:750; padding:4px 9px; border-radius:9px; background:var(--teal-50); color:var(--teal-700)}
+.perks{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.perk{padding:14px; border-radius:20px; background:var(--surface); border:1px solid var(--line); display:flex; flex-direction:column; gap:8px}
+.perk .pi{width:36px; height:36px; border-radius:12px; display:grid; place-items:center}
+.perk b{font-size:15px; font-weight:800} .perk span:not(.num){font-size:12.5px; color:var(--ink-2); line-height:1.35}
+
+/* building */
+.build{align-items:center; justify-content:center; padding:0 28px; text-align:center; gap:26px; background:radial-gradient(360px 300px at 50% 32%, #D6F2F5, rgba(214,242,245,0) 70%), var(--bg)}
+.spin-ring{position:relative; width:180px; height:180px; display:grid; place-items:center}
+.spin-ring svg.ring{position:absolute; inset:0; animation:spin 2.4s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.steps{display:flex; flex-direction:column; gap:12px; width:100%; text-align:left; background:var(--surface); border:1px solid var(--line); border-radius:22px; padding:18px}
+.step{display:flex; align-items:center; gap:12px; font-weight:700; font-size:15.5px; color:var(--ink-3); transition:color .3s}
+.step.done{color:var(--ink)} .step.active{color:var(--ink)}
+.sdot{width:26px; height:26px; border-radius:50%; display:grid; place-items:center; flex:none; background:#E4EEF0; transition:background .3s}
+.step.done .sdot{background:var(--mint); color:#fff; animation:tickPop .4s var(--ease-spring)}
+.step.active .sdot{background:var(--teal-100)}
+.step.active .sdot i{width:10px; height:10px; border-radius:50%; background:var(--teal); animation:pulse 1s ease-in-out infinite}
+@keyframes pulse{0%,100%{transform:scale(.8); opacity:.7}50%{transform:scale(1.2); opacity:1}}
+
+/* ---------- home ---------- */
+.home-head{position:sticky; top:0; z-index:20; padding:6px 20px 12px; display:flex; align-items:center; gap:12px; transition:background .3s, box-shadow .3s, padding .3s}
+.home-head.scrolled{background:rgba(243,248,249,.86); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:0 1px 0 var(--line)}
+.avatar{position:relative; width:46px; height:46px; flex:none; transition:transform .3s var(--ease-out)}
+.avatar img{width:100%; height:100%; border-radius:50%; display:block; background:var(--teal-100)}
+.avatar .lvl{position:absolute; right:-4px; bottom:-4px; min-width:22px; height:22px; padding:0 5px; border-radius:11px; background:var(--violet); color:#fff; font-size:11px; font-weight:800; display:grid; place-items:center; border:2.5px solid var(--bg); font-variant-numeric:tabular-nums}
+.greet-t{flex:1; min-width:0}
+.greet-t .d{font-size:12.5px; font-weight:700; color:var(--ink-3); transition:opacity .25s, height .3s; height:17px; overflow:hidden}
+.greet-t h1{font-family:var(--display); font-size:21px; font-weight:800; letter-spacing:-.02em; line-height:1.12; margin:0; text-wrap:balance; transition:font-size .3s var(--ease-out)}
+.scrolled .greet-t .d{opacity:0; height:0}
+.scrolled .greet-t h1{font-size:17px}
+.scrolled .avatar{transform:scale(.84)}
+.wave{display:inline-block; transform-origin:70% 70%; animation:wave 1.8s ease-in-out .6s 2}
+@keyframes wave{0%,60%,100%{transform:rotate(0)}10%,30%{transform:rotate(16deg)}20%,40%{transform:rotate(-8deg)}}
+.streak-chip{display:flex; align-items:center; gap:4px; height:40px; padding:0 12px 0 9px; border-radius:14px; background:var(--flame-50); color:#C24A12; font-weight:800; font-size:16px; font-family:var(--display); transition:transform .2s}
+.streak-chip:active{transform:scale(.92)}
+.streak-chip.bump{animation:bump .7s var(--ease-spring)}
+@keyframes bump{0%{transform:scale(1)}30%{transform:scale(1.25) rotate(-6deg)}60%{transform:scale(.95)}100%{transform:scale(1)}}
+.bell-dot{position:absolute; top:9px; right:10px; width:8px; height:8px; border-radius:50%; background:var(--berry); border:2px solid #fff}
+.home-body{display:flex; flex-direction:column; gap:14px; padding:4px 16px 120px}
+.bleed .home-body{padding-bottom:110px}
+.card{background:var(--surface); border-radius:26px; border:1px solid var(--line); padding:18px; position:relative; transition:transform .2s var(--ease-out), box-shadow .3s}
+.card.tap:active{transform:scale(.985)}
+.sec-head{display:flex; align-items:center; justify-content:space-between; gap:10px; margin-bottom:14px}
+.sec-head .h2{font-size:18px}
+.link{font-size:13.5px; font-weight:800; color:var(--teal-700); display:flex; align-items:center; gap:2px}
+.flash{animation:flash 1.4s var(--ease-out)}
+@keyframes flash{0%{box-shadow:0 0 0 0 rgba(8,164,179,.0)}20%{box-shadow:0 0 0 5px rgba(8,164,179,.35)}100%{box-shadow:0 0 0 0 rgba(8,164,179,0)}}
+.morph{animation:morph .5s var(--ease-out) both}
+@keyframes morph{from{opacity:0; transform:scale(.97) translateY(6px); filter:blur(3px)}to{opacity:1; transform:none; filter:none}}
+.hgt{transition:height .45s var(--ease-out); overflow:hidden}
+
+/* practice hero */
+.quest{border-radius:30px; padding:20px; color:#fff; position:relative; overflow:hidden; background:linear-gradient(150deg,#12B7C6 0%,#08A4B3 45%,#067D89 100%); box-shadow:0 22px 40px -26px rgba(6,110,121,.9)}
+.quest.done{background:linear-gradient(150deg,#123A45 0%,#0C2A33 60%,#0A2229 100%); box-shadow:0 22px 40px -26px rgba(12,42,51,.9)}
+.quest-bg{position:absolute; inset:0; pointer-events:none}
+.quest-top{display:flex; align-items:center; justify-content:space-between; position:relative}
+.q-tag{display:flex; align-items:center; gap:6px; font-size:11.5px; font-weight:800; letter-spacing:.1em; text-transform:uppercase; background:rgba(255,255,255,.16); padding:6px 10px; border-radius:10px}
+.q-title{font-family:var(--display); font-size:26px; font-weight:800; line-height:1.08; letter-spacing:-.02em; margin:14px 0 6px; position:relative; max-width:220px; text-wrap:balance}
+.q-sub{font-size:14px; opacity:.85; margin:0 0 16px; position:relative; max-width:230px; line-height:1.4}
+.q-meta{display:flex; gap:8px; margin-bottom:18px; position:relative; flex-wrap:wrap}
+.q-pill{display:flex; align-items:center; gap:5px; font-size:13.5px; font-weight:750; background:rgba(255,255,255,.14); padding:7px 10px; border-radius:11px; font-variant-numeric:tabular-nums}
+.q-pill.xp{background:var(--sun); color:#5A3B00}
+.q-mascot{position:absolute; right:-6px; top:36px; width:128px; height:128px}
+.goal-ring{position:absolute; right:18px; top:62px; width:92px; height:92px}
+.q-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin:16px 0 18px; position:relative}
+.q-stat{background:rgba(255,255,255,.08); border-radius:16px; padding:10px 10px 9px; display:flex; flex-direction:column; gap:2px}
+.q-stat .num{font-size:20px; font-weight:800}
+.q-stat span:not(.num){font-size:11.5px; font-weight:700; color:#9FC1C7; letter-spacing:.02em}
+.xp-earned{display:inline-flex; align-items:center; gap:6px; background:var(--sun); color:#5A3B00; font-weight:800; font-size:14px; padding:7px 11px; border-radius:11px; position:relative}
+.q-foot{font-size:12.5px; color:#9FC1C7; text-align:center; margin-top:12px; position:relative}
+
+/* class */
+.class-row{display:flex; gap:14px; align-items:stretch}
+.date-block{width:72px; flex:none; border-radius:18px; background:var(--teal-50); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:10px 4px; color:var(--teal-700)}
+.date-block .d1{font-size:11px; font-weight:800; letter-spacing:.1em; text-transform:uppercase}
+.date-block .d2{font-family:var(--display); font-size:24px; font-weight:800; line-height:1.05; color:var(--ink); font-variant-numeric:tabular-nums}
+.date-block .d3{font-size:12px; font-weight:800}
+.teacher{display:flex; align-items:center; gap:10px}
+.t-av{width:36px; height:36px; border-radius:50%; flex:none; position:relative}
+.t-av::after{content:""; position:absolute; right:-1px; bottom:-1px; width:11px; height:11px; border-radius:50%; background:var(--mint); border:2px solid #fff}
+.cls-info{flex:1; min-width:0; display:flex; flex-direction:column; gap:8px; justify-content:center}
+.cls-info .when{font-weight:800; font-size:15px; color:var(--ink)}
+.cls-info .tn{font-weight:750; font-size:15px}
+.cls-info .ts{font-size:13px; color:var(--ink-2)}
+.count-chip{display:inline-flex; align-items:center; gap:6px; font-size:12.5px; font-weight:800; color:var(--teal-700); background:var(--teal-50); padding:5px 9px; border-radius:9px; font-variant-numeric:tabular-nums}
+.count-chip.live{background:var(--berry-50); color:#C22C50}
+.count-chip .dot{width:7px; height:7px; border-radius:50%; background:currentColor; animation:pulse 1.2s ease-in-out infinite}
+.empty{display:flex; gap:14px; align-items:center}
+.empty-ill{width:72px; height:72px; flex:none}
+.empty .t{font-family:var(--display); font-weight:800; font-size:18px; letter-spacing:-.01em}
+.empty .s{font-size:14px; color:var(--ink-2); margin-top:2px; line-height:1.35}
+.note{display:flex; align-items:center; gap:8px; font-size:12.5px; font-weight:700; color:var(--ink-2); background:var(--bg); border-radius:12px; padding:8px 10px}
+
+/* journey */
+.journey{position:relative}
+.journey svg{display:block; width:100%; height:auto; overflow:visible}
+.j-legend{display:flex; justify-content:space-between; align-items:flex-end; margin-top:6px}
+.j-big{font-family:var(--display); font-size:36px; font-weight:800; letter-spacing:-.03em; line-height:1; font-variant-numeric:tabular-nums}
+.j-big small{font-size:18px; color:var(--ink-3); margin-left:2px}
+.ladder{display:flex; gap:6px; margin-top:16px}
+.ladder span{flex:1; text-align:center; font-family:var(--display); font-weight:800; font-size:12.5px; padding:6px 0; border-radius:9px; background:var(--bg); color:#A8BBBF; position:relative}
+.ladder span.past{background:var(--teal-50); color:var(--teal-700)}
+.ladder span.cur{background:var(--teal); color:#fff}
+.ladder span.next{background:#fff; color:var(--ink); box-shadow:inset 0 0 0 2px var(--teal)}
+
+/* skills */
+.growth{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px}
+.g-box{border-radius:18px; padding:12px 14px; display:flex; flex-direction:column; gap:2px}
+.g-box .num{font-size:24px; font-weight:800; display:flex; align-items:center; gap:4px}
+.g-box span:not(.num){font-size:12.5px; font-weight:700; line-height:1.3}
+.skills{display:grid; grid-template-columns:1fr 1fr; gap:10px}
+.skill{border-radius:20px; background:var(--bg); padding:12px 12px 11px; display:flex; align-items:center; gap:10px; text-align:left; transition:transform .2s var(--ease-out), background .25s; position:relative; overflow:hidden; min-height:76px}
+.skill:active{transform:scale(.96)}
+.skill .ring{width:46px; height:46px; flex:none; position:relative}
+.skill .ring svg{width:100%; height:100%; transform:rotate(-90deg)}
+.skill .ring .ri{position:absolute; inset:0; display:grid; place-items:center}
+.skill .nm{font-weight:750; font-size:14px}
+.skill .pc{font-family:var(--display); font-weight:800; font-size:20px; font-variant-numeric:tabular-nums; letter-spacing:-.02em}
+.skill .tag{position:absolute; top:8px; right:8px; font-size:9.5px; font-weight:800; letter-spacing:.08em; text-transform:uppercase; padding:3px 6px; border-radius:6px; background:var(--flame-50); color:#C24A12}
+.skill .back{position:absolute; inset:0; padding:12px; display:flex; flex-direction:column; justify-content:center; gap:3px; font-size:12.5px; line-height:1.35; color:#fff; opacity:0; transform:translateY(8px); transition:all .3s var(--ease-out)}
+.skill .back b{font-size:13px}
+.skill.flipped .back{opacity:1; transform:none}
+.skill.flipped .front{opacity:0}
+.skill .front{display:flex; flex-direction:column; gap:8px; transition:opacity .2s; width:100%}
+.skill .fr{display:flex; align-items:center; gap:10px}
+.skill .pc{font-size:22px}
+.skills-empty{display:flex; flex-direction:column; gap:14px}
+.ghosts{display:grid; grid-template-columns:repeat(4,1fr); gap:8px}
+.ghost{display:flex; flex-direction:column; align-items:center; gap:6px; font-size:11.5px; font-weight:750; color:var(--ink-3)}
+.ghost .gr{width:54px; height:54px; border-radius:50%; border:3px dashed #CFDFE2; display:grid; place-items:center; font-family:var(--display); font-weight:800; color:#B7C9CD; font-size:18px}
+.analyzing .ghost .gr{border-color:var(--teal); color:var(--teal); animation:spin 1.6s linear infinite}
+
+/* rewards */
+.week{display:flex; justify-content:space-between; margin:4px 0 16px}
+.day{display:flex; flex-direction:column; align-items:center; gap:6px; font-size:11.5px; font-weight:800; color:var(--ink-3)}
+.day .db{width:36px; height:36px; border-radius:12px; display:grid; place-items:center; background:var(--bg); transition:all .4s var(--ease-spring)}
+.day.on .db{background:linear-gradient(160deg,#FFA25E,#FF7A45); color:#fff; box-shadow:0 6px 12px -8px rgba(255,122,69,.9)}
+.day.today .db{background:#fff; box-shadow:inset 0 0 0 2px var(--flame); color:var(--flame)}
+.day.today.on .db{background:linear-gradient(160deg,#FFA25E,#FF7A45); color:#fff; animation:ignite .7s var(--ease-spring)}
+.day.today{color:var(--ink)}
+@keyframes ignite{0%{transform:scale(.6)}60%{transform:scale(1.2)}100%{transform:scale(1)}}
+.stats3{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px; margin-bottom:14px}
+.st{border-radius:16px; background:var(--bg); padding:10px 12px; display:flex; flex-direction:column; gap:1px}
+.st .num{font-size:20px; font-weight:800}
+.st span:not(.num){font-size:11.5px; font-weight:700; color:var(--ink-3)}
+.wk{display:flex; justify-content:space-between; font-size:13px; font-weight:750; margin-bottom:8px}
+.wk .num{font-size:14px}
+.bar{height:12px; border-radius:7px; background:var(--bg); overflow:hidden; position:relative}
+.bar i{position:absolute; left:0; top:0; bottom:0; border-radius:7px; transition:width 1.1s var(--ease-out)}
+.bar i::after{content:""; position:absolute; top:3px; left:6px; right:6px; height:3px; border-radius:2px; background:rgba(255,255,255,.4)}
+.badges{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; margin-top:16px}
+.badge{display:flex; flex-direction:column; align-items:center; gap:6px; padding:12px 6px 10px; border-radius:18px; background:var(--bg); font-size:12px; font-weight:750; text-align:center; line-height:1.25; transition:transform .2s var(--ease-spring)}
+.badge:active{transform:scale(.93)}
+.badge svg{filter:drop-shadow(0 6px 8px rgba(12,42,51,.15)); transition:transform .4s var(--ease-spring)}
+.badge:hover svg{transform:rotate(-6deg) scale(1.06)}
+.badge.locked{color:var(--ink-3)} .badge.locked svg{filter:grayscale(1) opacity(.45)}
+
+/* plan / subscription */
+.sub-card{display:flex; flex-direction:column; gap:12px}
+.sub-top{display:flex; align-items:center; gap:12px}
+.tier{display:inline-flex; align-items:center; gap:6px; padding:5px 10px 5px 8px; border-radius:10px; font-weight:800; font-size:13px; background:linear-gradient(135deg,#FFE3A1,#FFC23D); color:#5A3B00}
+.segs{display:flex; gap:3px; height:10px}
+.segs i{flex:1; border-radius:3px; background:var(--teal); transition:background .5s, transform .5s var(--ease-spring)}
+.segs i.off{background:#E3ECEE}
+.sub-card.warn{background:linear-gradient(180deg,#FFF8EC,#fff)}
+.sub-card.none{background:linear-gradient(150deg,#123A45,#0C2A33); color:#fff; border-color:transparent}
+
+/* tab bar */
+.tabbar{position:absolute; left:14px; right:14px; bottom:26px; height:66px; border-radius:24px; background:rgba(255,255,255,.92); backdrop-filter:blur(16px); -webkit-backdrop-filter:blur(16px); box-shadow:0 14px 34px -18px rgba(12,42,51,.55), 0 0 0 1px var(--line); display:flex; align-items:center; justify-content:space-around; z-index:30; padding:0 6px}
+.bleed .tabbar{bottom:calc(12px + env(safe-area-inset-bottom,0px))}
+.tab{display:flex; flex-direction:column; align-items:center; gap:3px; font-size:11px; font-weight:800; color:var(--ink-3); width:66px; padding:6px 0; border-radius:14px; transition:color .2s, transform .15s}
+.tab:active{transform:scale(.9)}
+.tab.on{color:var(--teal-700)}
+.tab.on .ti{background:var(--teal-50)}
+.tab .ti{width:44px; height:28px; border-radius:10px; display:grid; place-items:center; transition:background .3s}
+
+/* sheets, toast, confetti */
+.scrim{position:absolute; inset:0; background:rgba(8,30,36,.42); z-index:70; animation:fade .3s both}
+.scrim.out{animation:fadeOut .28s both}
+@keyframes fade{from{opacity:0}} @keyframes fadeOut{to{opacity:0}}
+.sheet{position:absolute; left:0; right:0; bottom:0; z-index:71; background:var(--surface); border-radius:30px 30px 0 0; padding:10px 20px 34px; max-height:88%; overflow:auto; animation:sheetIn .42s var(--ease-out) both; scrollbar-width:none}
+.sheet.out{animation:sheetOut .28s ease-in both}
+@keyframes sheetIn{from{transform:translateY(100%)}} @keyframes sheetOut{to{transform:translateY(100%)}}
+.grab{width:40px; height:5px; border-radius:3px; background:#D5E2E5; margin:0 auto 14px}
+.slot{display:flex; align-items:center; gap:12px; width:100%; text-align:left; padding:12px; border-radius:18px; border:2px solid var(--line); transition:all .2s}
+.slot.sel{border-color:var(--teal); background:#F1FBFC}
+.toast{position:absolute; left:50%; top:62px; transform:translateX(-50%); z-index:90; background:var(--ink); color:#fff; padding:11px 16px 11px 12px; border-radius:16px; font-weight:700; font-size:14px; display:flex; align-items:center; gap:10px; box-shadow:0 16px 30px -16px rgba(0,0,0,.6); animation:toastIn .45s var(--ease-spring) both; max-width:340px; width:max-content}
+.bleed .toast{top:calc(14px + env(safe-area-inset-top,0px))}
+@keyframes toastIn{from{transform:translate(-50%,-20px) scale(.9); opacity:0}}
+.confetti{position:absolute; inset:0; width:100%; height:100%; pointer-events:none; z-index:95}
+.xp-fly{position:absolute; z-index:40; pointer-events:none; background:var(--sun); color:#5A3B00; font-weight:800; font-family:var(--display); font-size:16px; padding:6px 10px; border-radius:12px; box-shadow:0 10px 20px -10px rgba(138,91,0,.6); animation:xpfly 1.6s var(--ease-out) forwards}
+@keyframes xpfly{0%{transform:translateY(20px) scale(.6); opacity:0}20%{transform:translateY(0) scale(1.1); opacity:1}70%{transform:translateY(-26px) scale(1); opacity:1}100%{transform:translateY(-54px) scale(.9); opacity:0}}
+.spinner{width:20px; height:20px; border-radius:50%; border:3px solid rgba(255,255,255,.35); border-top-color:#fff; animation:spin .8s linear infinite}
+.spinner.dark{border-color:rgba(8,164,179,.25); border-top-color:var(--teal)}
+
+/* practice */
+.pr-head{display:flex; align-items:center; gap:14px; padding:4px 20px 8px}
+.pr-body{flex:1; padding:14px 20px 0; display:flex; flex-direction:column; gap:18px}
+.skill-chip{align-self:flex-start; display:flex; align-items:center; gap:6px; font-size:12px; font-weight:800; letter-spacing:.06em; text-transform:uppercase; padding:6px 10px; border-radius:10px}
+.prompt{font-family:var(--display); font-size:25px; font-weight:750; letter-spacing:-.02em; line-height:1.2; margin:0; text-wrap:balance}
+.prompt .gap{display:inline-block; min-width:84px; border-bottom:3px solid var(--teal-200); margin:0 4px; text-align:center; color:var(--teal-700); transition:all .3s}
+.ans{display:flex; flex-direction:column; gap:10px}
+.ans button{padding:16px 18px; border-radius:18px; background:var(--surface); border:2px solid var(--line); text-align:left; font-weight:750; font-size:16px; transition:all .2s var(--ease-out); display:flex; align-items:center; gap:12px}
+.ans button:active{transform:scale(.975)}
+.ans .key{width:28px; height:28px; border-radius:9px; border:2px solid var(--line); display:grid; place-items:center; font-size:12.5px; font-weight:800; color:var(--ink-3); flex:none; transition:all .2s}
+.ans button.sel{border-color:var(--teal); background:#F1FBFC} .ans button.sel .key{border-color:var(--teal); color:var(--teal)}
+.ans button.right{border-color:var(--mint); background:var(--mint-50)} .ans button.right .key{background:var(--mint); border-color:var(--mint); color:#fff}
+.ans button.wrong{border-color:var(--berry); background:var(--berry-50); animation:shake .4s} .ans button.wrong .key{background:var(--berry); border-color:var(--berry); color:#fff}
+@keyframes shake{20%,60%{transform:translateX(-6px)}40%,80%{transform:translateX(6px)}}
+.fb{padding:18px 20px 30px; border-radius:28px 28px 0 0; animation:sheetIn .38s var(--ease-out) both; display:flex; flex-direction:column; gap:14px}
+.bleed .fb{padding-bottom:20px}
+.fb.ok{background:var(--mint-50)} .fb.no{background:var(--berry-50)}
+.fb-t{display:flex; align-items:center; gap:12px}
+.fb-t .fi{width:40px; height:40px; border-radius:50%; display:grid; place-items:center; color:#fff; animation:tickPop .4s var(--ease-spring)}
+.fb-t b{font-family:var(--display); font-size:21px; font-weight:800}
+.fb-t span{display:block; font-size:14px; font-weight:650}
+.btn-ok{background:var(--mint); color:#fff; box-shadow:0 12px 22px -14px rgba(35,179,127,.9)}
+.btn-no{background:var(--berry); color:#fff; box-shadow:0 12px 22px -14px rgba(238,79,114,.9)}
+
+/* celebrate */
+.celebrate{background:radial-gradient(420px 400px at 50% 26%, #17BCCB, #07808D 70%); color:#fff; align-items:center; text-align:center; padding:0 24px 30px}
+.cel-xp{font-family:var(--display); font-weight:800; font-size:64px; letter-spacing:-.04em; line-height:1; color:var(--sun); text-shadow:0 6px 0 rgba(0,0,0,.08)}
+.cel-stats{display:grid; grid-template-columns:repeat(3,1fr); gap:10px; width:100%}
+.cel-stats div{background:rgba(255,255,255,.14); border-radius:18px; padding:12px 6px; display:flex; flex-direction:column; gap:2px}
+.cel-stats .num{font-size:22px; font-weight:800}
+.cel-stats span:not(.num){font-size:12px; font-weight:700; opacity:.8}
+.cel-streak{display:flex; align-items:center; gap:10px; background:rgba(255,255,255,.14); border-radius:18px; padding:10px 16px 10px 10px; font-weight:800}
+.cel-streak .fl{width:38px; height:38px; border-radius:12px; display:grid; place-items:center; background:linear-gradient(160deg,#FFA25E,#FF7A45); animation:ignite .8s var(--ease-spring) .6s both}
+.bounce{animation:bounceIn .9s var(--ease-spring) both}
+@keyframes bounceIn{0%{transform:scale(.3) translateY(40px); opacity:0}60%{transform:scale(1.08)}100%{transform:none; opacity:1}}
+.jump{animation:jump 1.2s ease-in-out infinite 1s}
+@keyframes jump{0%,100%{transform:translateY(0)}40%{transform:translateY(-14px)}60%{transform:translateY(0)}}
+
+.demo-fab{position:absolute; right:16px; bottom:calc(92px + env(safe-area-inset-bottom,0px)); z-index:80; height:40px; padding:0 14px; border-radius:20px; background:var(--ink); color:#fff; font-weight:800; font-size:13px; display:flex; align-items:center; gap:6px; box-shadow:0 10px 20px -10px rgba(0,0,0,.5)}
+.demo-sheet{position:fixed; inset:0; z-index:200; background:rgba(4,20,25,.5); display:flex; align-items:flex-end; animation:fade .25s both}
+.demo-sheet .inner{background:var(--stage-bg); width:100%; max-height:86%; overflow:auto; border-radius:24px 24px 0 0; padding:18px 16px calc(24px + env(safe-area-inset-bottom,0px)); animation:sheetIn .38s var(--ease-out) both}
+.demo-sheet .panel{width:100%; max-height:none; overflow:visible; padding:0}
+
+@media (prefers-reduced-motion: reduce){
+  *,*::before,*::after{animation-duration:.01ms!important; animation-iteration-count:1!important; transition-duration:.01ms!important; scroll-behavior:auto!important}
+}
+</style>
+
+<div id="root"></div>
+
+<script src="https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@babel/standalone@7.26.2/babel.min.js"></script>
+<script type="text/babel" data-presets="react">
+const { useState, useEffect, useRef, useLayoutEffect, useCallback, useMemo } = React;
+const REDUCED = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/* ------------------------------------------------------------------ icons */
+const P = {
+  home:"M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6H9v6H4a1 1 0 0 1-1-1z",
+  compass:"M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M15.5 8.5l-2 5-5 2 2-5z",
+  book:"M5 4.5A1.5 1.5 0 0 1 6.5 3H19v15H6.5A1.5 1.5 0 0 0 5 19.5z M5 19.5A1.5 1.5 0 0 0 6.5 21H19 M9 7h6",
+  mic:"M12 3a3 3 0 0 1 3 3v6a3 3 0 0 1-6 0V6a3 3 0 0 1 3-3z M5.5 11a6.5 6.5 0 0 0 13 0 M12 17.5V21",
+  puzzle:"M5 8h3.5a2 2 0 1 1 4 0H16v3.5a2 2 0 1 1 0 4V19H5z",
+  wave:"M3 12h1.5 M7 8.5v7 M11 5v14 M15 8v8 M19 10.5v3 M21.5 12h-.5",
+  cap:"M2 9.5 12 5l10 4.5-10 4.5z M6 11.5V16c0 1.4 2.7 3 6 3s6-1.6 6-3v-4.5 M22 9.5V15",
+  briefcase:"M3 8h18v12H3z M8.5 8V5.5h7V8 M3 13h18",
+  headphones:"M4 15v-3a8 8 0 0 1 16 0v3 M4 15h3v6H4z M17 15h3v6h-3z",
+  bell:"M6 16v-5a6 6 0 0 1 12 0v5l1.5 2h-15z M10 21h4",
+  check:"M5 12.5 9.5 17 19 7.5",
+  chevR:"M9 5l7 7-7 7", chevL:"M15 5l-7 7 7 7",
+  x:"M6 6l12 12M18 6 6 18",
+  clock:"M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 7.5V12l3 2",
+  calendar:"M4 6h16v15H4z M4 10.5h16 M8.5 3v4 M15.5 3v4",
+  calPlus:"M4 6h16v15H4z M4 10.5h16 M8.5 3v4 M15.5 3v4 M12 13.5v5 M9.5 16h5",
+  video:"M3 7h12v10H3z M15 10.5 21 7v10l-6-3.5",
+  list:"M9 6h11 M9 12h11 M9 18h11 M4.5 6h.01 M4.5 12h.01 M4.5 18h.01",
+  user:"M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8z M4.5 21a7.5 7.5 0 0 1 15 0",
+  trend:"M3 17l6-6 4 4 7.5-7.5 M15 7.5h5.5V13",
+  lock:"M6 11h12v10H6z M8.5 11V8a3.5 3.5 0 0 1 7 0v3",
+  sparkle:"M12 3.5l1.9 5.1 5.1 1.9-5.1 1.9L12 17.5l-1.9-5.1L5 10.5l5.1-1.9z M18.5 15.5l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z",
+  gift:"M4 10h16v11H4z M3 7h18v3H3z M12 7v14 M12 7C10 3 6.5 4 7.5 6.5 M12 7c2-4 5.5-3 4.5-.5",
+  info:"M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 11v5 M12 7.8h.01",
+  target:"M12 3a9 9 0 1 0 0 18 9 9 0 0 0 0-18z M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9z M12 11.2a.8.8 0 1 0 0 1.6.8.8 0 0 0 0-1.6z",
+  sliders:"M4 7h10 M18 7h2 M4 17h4 M12 17h8 M14 5v4 M8 15v4",
+  refresh:"M20 11a8 8 0 1 0-2.3 5.7 M20 5v6h-6",
+  flag:"M5 21V4 M5 4h12l-2.5 4L17 12H5",
+  star:"M12 3.5l2.6 5.5 6 .8-4.4 4.1 1.1 5.9L12 17l-5.3 2.8 1.1-5.9L3.4 9.8l6-.8z",
+};
+const FILLED = {
+  flame:"M12 22c4.1 0 7-2.8 7-7 0-3-1.6-5.5-3.6-7.4-.4 2-1.4 3.4-2.8 3.9.6-3.4-.6-6.7-3.8-9.5C8.7 5.6 5 8.7 5 15c0 4.2 2.9 7 7 7z",
+  bolt:"M13.5 2 4.5 13.5h6.5L10 22l9-12h-6.6z",
+  play:"M8 5.2v13.6a1 1 0 0 0 1.5.9l10.8-6.8a1 1 0 0 0 0-1.8L9.5 4.3A1 1 0 0 0 8 5.2z",
+  crown:"M3.5 8.5l4.2 3.7L12 5.5l4.3 6.7 4.2-3.7-1.8 10.5H5.3z",
+};
+function Icon({ n, s = 22, w = 2.2, c, style }) {
+  if (FILLED[n]) return <svg width={s} height={s} viewBox="0 0 24 24" style={style} aria-hidden="true"><path d={FILLED[n]} fill={c || 'currentColor'} /></svg>;
+  return <svg width={s} height={s} viewBox="0 0 24 24" fill="none" stroke={c || 'currentColor'} strokeWidth={w} strokeLinecap="round" strokeLinejoin="round" style={style} aria-hidden="true"><path d={P[n]} /></svg>;
+}
+
+/* ------------------------------------------------------------------ brand art */
+function LogoMark({ size = 34 }) {
+  return (
+    <svg className="logo-mark" width={size} height={size} viewBox="0 0 40 40" aria-hidden="true">
+      <defs><linearGradient id="lg1" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#1FC6D4" /><stop offset="1" stopColor="#068C99" /></linearGradient></defs>
+      <path d="M9 4h22a7 7 0 0 1 7 7v14a7 7 0 0 1-7 7H17l-7 6v-6H9a7 7 0 0 1-7-7V11a7 7 0 0 1 7-7z" fill="url(#lg1)" />
+      <path d="M25 12.5c-1-1.4-2.8-2.1-4.8-2.1-3 0-5 1.6-5 3.9 0 5 9.6 2.9 9.6 7.3 0 2.2-2.1 3.8-5.1 3.8-2.2 0-4.1-.9-5.2-2.4" fill="none" stroke="#fff" strokeWidth="3.2" strokeLinecap="round" />
+      <circle cx="33" cy="6" r="4.2" fill="#FFC23D" stroke="#fff" strokeWidth="1.8" />
+    </svg>
+  );
+}
+function Logo() { return <div className="logo"><LogoMark /><span>skillio</span></div>; }
+
+/* Original Skillio buddy: a speech bubble with a spark. */
+function Buddy({ size = 180, mood = 'happy', id = 'b' }) {
+  const cheer = mood === 'cheer';
+  return (
+    <svg width={size} height={size} viewBox="0 0 120 120" aria-hidden="true" style={{ overflow: 'visible' }}>
+      <defs>
+        <linearGradient id={id + 'g'} x1="0" y1="0" x2=".8" y2="1"><stop offset="0" stopColor="#2CD0DD" /><stop offset="1" stopColor="#0795A4" /></linearGradient>
+        <radialGradient id={id + 's'} cx=".5" cy=".5" r=".5"><stop offset="0" stopColor="#0C2A33" stopOpacity=".22" /><stop offset="1" stopColor="#0C2A33" stopOpacity="0" /></radialGradient>
+      </defs>
+      <ellipse cx="60" cy="114" rx="36" ry="5" fill={`url(#${id}s)`} />
+      {cheer && <g stroke="#0795A4" strokeWidth="7" strokeLinecap="round"><path d="M14 58 4 40" /><path d="M106 58l10-18" /></g>}
+      <path d="M26 18h68a18 18 0 0 1 18 18v36a18 18 0 0 1-18 18H56l-19 16V90H26A18 18 0 0 1 8 72V36a18 18 0 0 1 18-18z" fill={`url(#${id}g)`} />
+      <path d="M22 30c3-6 9-8 16-8" stroke="#fff" strokeOpacity=".45" strokeWidth="5" strokeLinecap="round" fill="none" />
+      <g className="blink">
+        <ellipse cx="45" cy="52" rx="8" ry="10" fill="#fff" /><ellipse cx="75" cy="52" rx="8" ry="10" fill="#fff" />
+        <circle cx="46.5" cy="54" r="4.6" fill="#0C2A33" /><circle cx="76.5" cy="54" r="4.6" fill="#0C2A33" />
+        <circle cx="48" cy="52" r="1.6" fill="#fff" /><circle cx="78" cy="52" r="1.6" fill="#fff" />
+      </g>
+      <circle cx="34" cy="68" r="5" fill="#FF9DB5" opacity=".85" /><circle cx="86" cy="68" r="5" fill="#FF9DB5" opacity=".85" />
+      {cheer
+        ? <g><path d="M49 67h22c0 9-5 14-11 14s-11-5-11-14z" fill="#0C2A33" /><path d="M54 77c3-3 9-3 12 0-2 3-10 3-12 0z" fill="#FF7A8E" /></g>
+        : <path d="M51 69q9 8 18 0" stroke="#0C2A33" strokeWidth="3.6" strokeLinecap="round" fill="none" />}
+      <path d="M99 3l2.6 6.4L108 12l-6.4 2.6L99 21l-2.6-6.4L90 12l6.4-2.6z" fill="#FFC23D" />
+    </svg>
+  );
+}
+
+/* avatarUrl — an illustrated avatar shipped as a data URI */
+const AVATAR = 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><defs><linearGradient id="a" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFD978"/><stop offset="1" stop-color="#FFB547"/></linearGradient></defs><rect width="64" height="64" fill="url(#a)"/><path d="M12 64c2-12 10-18 20-18s18 6 20 18z" fill="#0C2A33"/><circle cx="32" cy="30" r="13" fill="#C98B62"/><path d="M18 28c0-10 6-15 14-15s15 4 14 14c-3-4-9-6-14-6-6 0-10 3-14 7z" fill="#2B1B14"/><circle cx="27" cy="31" r="1.7" fill="#2B1B14"/><circle cx="37" cy="31" r="1.7" fill="#2B1B14"/><path d="M28 37q4 3 8 0" stroke="#2B1B14" stroke-width="1.8" fill="none" stroke-linecap="round"/></svg>`);
+const teacherAv = (bg, skin, hair) => 'data:image/svg+xml;utf8,' + encodeURIComponent(`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64"><rect width="64" height="64" rx="32" fill="${bg}"/><path d="M12 64c2-12 10-18 20-18s18 6 20 18z" fill="#fff" opacity=".9"/><path d="M16 40c-2-18 6-27 16-27s18 9 16 27z" fill="${hair}"/><circle cx="32" cy="30" r="12" fill="${skin}"/><path d="M20 27c2-8 7-11 12-11s11 3 12 11c-5-3-11-5-24 0z" fill="${hair}"/><circle cx="27.5" cy="31" r="1.6" fill="#2B1B14"/><circle cx="36.5" cy="31" r="1.6" fill="#2B1B14"/><path d="M28.5 36q3.5 2.6 7 0" stroke="#2B1B14" stroke-width="1.7" fill="none" stroke-linecap="round"/></svg>`);
+const TEACHERS = {
+  sarah: { name: 'Sarah Williams', av: teacherAv('#CDEEF1', '#F1C7A6', '#8A5A3B') },
+  james: { name: 'James Carter', av: teacherAv('#EFEDFE', '#8D5B3E', '#1E1510') },
+  priya: { name: 'Priya Nair', av: teacherAv('#FFF6DD', '#C68A62', '#231815') },
+};
+
+/* ------------------------------------------------------------------ content */
+const GOALS = [
+  { id: 'speak', label: 'Speak English confidently', sub: 'Hold real conversations without freezing', icon: 'mic', c: '#08A4B3', bg: '#E3F6F8' },
+  { id: 'vocab', label: 'Improve vocabulary', sub: 'Learn words you will actually use', icon: 'book', c: '#D98309', bg: '#FEF1DC' },
+  { id: 'grammar', label: 'Improve grammar', sub: 'Build sentences that sound right', icon: 'puzzle', c: '#6A5AE8', bg: '#EFEDFE' },
+  { id: 'pron', label: 'Improve pronunciation', sub: 'Sound clear and natural', icon: 'wave', c: '#E0426A', bg: '#FDEBEF' },
+  { id: 'exam', label: 'Prepare for an exam', sub: 'IELTS, TOEFL, Cambridge and school tests', icon: 'cap', c: '#0C2A33', bg: '#E6EEF0' },
+  { id: 'work', label: 'Improve English for work', sub: 'Meetings, emails and interviews', icon: 'briefcase', c: '#1E9E70', bg: '#E3F7EE' },
+];
+const LEVELS = [
+  { id: 'beginner', name: 'Beginner', cefr: 'A1', next: 'A2', desc: 'I know a few words and simple phrases' },
+  { id: 'elementary', name: 'Elementary', cefr: 'A2', next: 'B1', desc: 'I can handle short, everyday conversations' },
+  { id: 'intermediate', name: 'Intermediate', cefr: 'B1', next: 'B2', desc: 'I can talk about familiar topics with some effort' },
+  { id: 'upper', name: 'Upper Intermediate', cefr: 'B2', next: 'C1', desc: 'I can discuss most topics fairly fluently' },
+  { id: 'advanced', name: 'Advanced', cefr: 'C1', next: 'C2', desc: 'I can express complex ideas with ease' },
+];
+const DAILY = [{ min: 5, label: 'Casual' }, { min: 10, label: 'Regular', rec: true }, { min: 15, label: 'Serious' }, { min: 20, label: 'Intense' }];
+const FOCUS = [
+  { id: 'speaking', label: 'Speaking', icon: 'mic', c: '#08A4B3', bg: '#E3F6F8' },
+  { id: 'vocabulary', label: 'Vocabulary', icon: 'book', c: '#D98309', bg: '#FEF1DC' },
+  { id: 'grammar', label: 'Grammar', icon: 'puzzle', c: '#6A5AE8', bg: '#EFEDFE' },
+  { id: 'listening', label: 'Listening', icon: 'headphones', c: '#1E9E70', bg: '#E3F7EE' },
+  { id: 'pronunciation', label: 'Pronunciation', icon: 'wave', c: '#E0426A', bg: '#FDEBEF' },
+];
+const SKILLS = [
+  { k: 'grammar', label: 'Grammar', c: '#7566F0', bg: '#EFEDFE', icon: 'puzzle', tip: 'Strongest skill. Conditionals are next up.' },
+  { k: 'vocabulary', label: 'Vocabulary', c: '#F29A1F', bg: '#FEF3E2', icon: 'book', tip: '312 words learned. 18 are due for review.' },
+  { k: 'pronunciation', label: 'Pronunciation', c: '#EE4F72', bg: '#FDEBEF', icon: 'wave', tip: 'Word stress improved 9% this month.' },
+  { k: 'speaking', label: 'Speaking', c: '#08A4B3', bg: '#E3F6F8', icon: 'mic', tip: 'Your focus area. 2 speaking drills this week.' },
+];
+const QUESTIONS = [
+  { skill: 'grammar', q: ["I'm really looking forward", "you this weekend."], a: ['to seeing', 'to see', 'seeing', 'for seeing'], r: 0, why: '"Look forward to" is followed by the -ing form.' },
+  { skill: 'vocabulary', q: ['Which word means "extremely tired"?'], a: ['exhausted', 'excited', 'anxious', 'amazed'], r: 0, why: '"Exhausted" is a stronger way to say very tired.' },
+  { skill: 'speaking', q: ['Could you', 'me up from the station at six?'], a: ['pick', 'take', 'get', 'bring'], r: 0, why: '"Pick someone up" means to collect them.' },
+  { skill: 'grammar', q: ['She', 'in London since 2019.'], a: ['has lived', 'lives', 'is living', 'lived'], r: 0, why: 'Use the present perfect with "since" for something still true.' },
+  { skill: 'speaking', q: ['Your friend says "Thanks so much!" The most natural reply is…'], a: ['No worries!', 'Yes, thanks.', 'It is nothing matter.', 'You are welcome for.'], r: 0, why: '"No worries!" is a friendly, natural reply.' },
+  { skill: 'vocabulary', q: ['Choose the opposite of "generous".'], a: ['stingy', 'kind', 'wealthy', 'honest'], r: 0, why: 'A stingy person does not like to share.' },
+  { skill: 'pronunciation', q: ['Which word has a silent letter?'], a: ['knife', 'kitten', 'kettle', 'kind'], r: 0, why: 'The "k" in knife is silent: /naɪf/.' },
+  { skill: 'grammar', q: ['If I', 'more time, I would travel more.'], a: ['had', 'have', 'will have', 'would have'], r: 0, why: 'The second conditional uses the past simple after "if".' },
+  { skill: 'vocabulary', q: ['"To break the ice" means to…'], a: ['start a friendly conversation', 'feel very cold', 'end a friendship', 'make a mistake'], r: 0, why: 'It means making people feel relaxed at first.' },
+  { skill: 'pronunciation', q: ['Where is the stress in "photographer"?'], a: ['pho-TOG-ra-pher', 'PHO-to-gra-pher', 'pho-to-GRA-pher', 'pho-to-gra-PHER'], r: 0, why: 'The stress falls on the second syllable: pho-TOG-ra-pher.' },
+].map((q, i) => {
+  // shuffle answers deterministically so the right one isn't always first
+  const order = [[1, 0, 2, 3], [2, 3, 0, 1], [0, 1, 2, 3], [3, 1, 0, 2], [1, 2, 0, 3], [2, 0, 3, 1], [3, 2, 1, 0], [1, 0, 3, 2], [0, 2, 1, 3], [2, 1, 0, 3]][i];
+  return { ...q, a: order.map(j => q.a[j]), r: order.indexOf(q.r) };
+});
+const SKILL_META = Object.fromEntries(SKILLS.map(s => [s.k, s]));
+
+const DEFAULT_RESULT = { correct: 9, total: 10, seconds: 462, accuracy: 90, bySkill: { grammar: [3, 3], vocabulary: [3, 3], speaking: [2, 2], pronunciation: [1, 2] }, missed: ['pho-TOG-ra-pher'] };
+const BADGES = [
+  { id: 'streak', name: 'Week Warrior', desc: 'Practised 7 days in a row. Keep the flame going.', earned: 'Earned today', c1: '#FFA25E', c2: '#FF6A3D', glyph: 'flame' },
+  { id: 'words', name: 'Word Collector', desc: 'Learned your first 300 words.', earned: 'Earned Sep 21', c1: '#FFD36A', c2: '#F29A1F', glyph: 'book' },
+  { id: 'voice', name: 'Clear Voice', desc: 'Score 80%+ in pronunciation. You are 9% away.', earned: 'Locked', c1: '#9C90FF', c2: '#6A5AE8', glyph: 'mic', locked: true },
+];
+const SLOTS = [
+  { id: 's1', day: 0, h: 19, m: 30, teacher: 'sarah', subject: 'English Conversation' },
+  { id: 's2', day: 1, h: 17, m: 0, teacher: 'james', subject: 'Grammar Clinic' },
+  { id: 's3', day: 2, h: 18, m: 0, teacher: 'priya', subject: 'Pronunciation Lab' },
+];
+
+/* ------------------------------------------------------------------ helpers */
+const pad = n => String(n).padStart(2, '0');
+function atToday(dayOffset, h, m) { const d = new Date(); d.setDate(d.getDate() + dayOffset); d.setHours(h, m, 0, 0); return d; }
+function isoLocal(d) { return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}:00`; }
+function fmtTime(d) { let h = d.getHours(); const ap = h >= 12 ? 'PM' : 'AM'; h = h % 12 || 12; return `${h}:${pad(d.getMinutes())} ${ap}`; }
+function dayLabel(d) {
+  const t = new Date(); t.setHours(0, 0, 0, 0); const x = new Date(d); x.setHours(0, 0, 0, 0);
+  const diff = Math.round((x - t) / 864e5);
+  if (diff === 0) return 'Today'; if (diff === 1) return 'Tomorrow';
+  return x.toLocaleDateString('en-US', { weekday: 'short' });
+}
+function greeting() { const h = new Date().getHours(); return h < 5 ? 'Good evening' : h < 12 ? 'Good morning' : h < 17 ? 'Good afternoon' : 'Good evening'; }
+function fmtSecs(s) { return `${Math.floor(s / 60)}m ${pad(s % 60)}s`; }
+const nf = new Intl.NumberFormat('en-US');
+
+function useCountUp(target, { duration = 1000, run = true, from } = {}) {
+  const [v, setV] = useState(from ?? 0);
+  const cur = useRef(from ?? 0);
+  useEffect(() => {
+    if (!run) return;
+    if (REDUCED) { cur.current = target; setV(target); return; }
+    const start = cur.current, t0 = performance.now(); let raf;
+    const tick = now => {
+      const p = Math.min(1, (now - t0) / duration), e = 1 - Math.pow(1 - p, 3);
+      const val = start + (target - start) * e; cur.current = val; setV(val);
+      if (p < 1) raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [target, run]);
+  return v;
+}
+function useInView(ref, margin = '0px') {
+  const [seen, setSeen] = useState(false);
+  useEffect(() => {
+    if (seen || !ref.current) return;
+    if (!('IntersectionObserver' in window)) { setSeen(true); return; }
+    const io = new IntersectionObserver(es => { if (es.some(e => e.isIntersecting)) { setSeen(true); io.disconnect(); } }, { rootMargin: margin, threshold: .2 });
+    io.observe(ref.current);
+    return () => io.disconnect();
+  }, [seen]);
+  return seen;
+}
+function useNow(ms = 30000) { const [n, setN] = useState(Date.now()); useEffect(() => { const t = setInterval(() => setN(Date.now()), ms); return () => clearInterval(t); }, [ms]); return n; }
+
+/* smoothly animates its own height when children change */
+function AutoHeight({ children, className = '' }) {
+  const outer = useRef(null), inner = useRef(null); const [h, setH] = useState('auto');
+  useLayoutEffect(() => {
+    if (!inner.current || !('ResizeObserver' in window)) return;
+    const ro = new ResizeObserver(() => setH(inner.current.offsetHeight));
+    ro.observe(inner.current); return () => ro.disconnect();
+  }, []);
+  return <div ref={outer} className={'hgt ' + className} style={{ height: h }}><div ref={inner}>{children}</div></div>;
+}
+
+function Btn({ kind = 'primary', className = '', children, onClick, disabled, ...rest }) {
+  const [rips, setRips] = useState([]);
+  const down = e => {
+    if (disabled || REDUCED) return;
+    const r = e.currentTarget.getBoundingClientRect(); const size = Math.max(r.width, r.height) * 2.2;
+    const scale = r.width / e.currentTarget.offsetWidth || 1;
+    const id = Math.random();
+    setRips(x => [...x, { id, x: (e.clientX - r.left) / scale - size / 2, y: (e.clientY - r.top) / scale - size / 2, size }]);
+    setTimeout(() => setRips(x => x.filter(p => p.id !== id)), 650);
+  };
+  return (
+    <button className={`btn btn-${kind} ${className}`} onPointerDown={down} onClick={onClick} disabled={disabled} {...rest}>
+      {rips.map(p => <span key={p.id} className="ripple" style={{ left: p.x, top: p.y, width: p.size, height: p.size }} />)}
+      {children}
+    </button>
+  );
+}
+
+/* confetti on a canvas that covers the phone screen */
+function fireConfetti(canvas, { count = 150, x = .5, y = .3, spread = 1 } = {}) {
+  if (!canvas || REDUCED) return;
+  const dpr = Math.min(2, window.devicePixelRatio || 1);
+  const W = canvas.clientWidth, H = canvas.clientHeight;
+  canvas.width = W * dpr; canvas.height = H * dpr;
+  const ctx = canvas.getContext('2d'); ctx.scale(dpr, dpr);
+  const colors = ['#08A4B3', '#FFC23D', '#FF7A45', '#23B37F', '#7566F0', '#EE4F72', '#7FE1EA'];
+  const ps = Array.from({ length: count }, () => ({
+    x: W * x, y: H * y, vx: (Math.random() - .5) * 15 * spread, vy: -Math.random() * 13 - 5,
+    r: Math.random() * Math.PI, vr: (Math.random() - .5) * .35, w: 6 + Math.random() * 6, h: 8 + Math.random() * 8,
+    c: colors[(Math.random() * colors.length) | 0], shape: Math.random() < .3 ? 'c' : 'r', life: 0,
+  }));
+  let raf;
+  const step = () => {
+    ctx.clearRect(0, 0, W, H); let alive = 0;
+    for (const p of ps) {
+      p.vy += .32; p.vx *= .985; p.vy *= .985; p.x += p.vx; p.y += p.vy; p.r += p.vr; p.life++;
+      if (p.y < H + 30) alive++;
+      ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.fillStyle = p.c;
+      if (p.shape === 'c') { ctx.beginPath(); ctx.arc(0, 0, p.w / 2.2, 0, Math.PI * 2); ctx.fill(); }
+      else { ctx.scale(1, Math.cos(p.life * .15)); ctx.fillRect(-p.w / 2, -p.h / 2, p.w, p.h); }
+      ctx.restore();
+    }
+    if (alive) raf = requestAnimationFrame(step); else ctx.clearRect(0, 0, W, H);
+  };
+  raf = requestAnimationFrame(step);
+}
+
+/* ------------------------------------------------------------------ onboarding */
+function OnbShell({ step, total = 5, onBack, title, sub, children, cta, ctaLabel = 'Continue', ctaDisabled, footerExtra }) {
+  return (
+    <>
+      <div className="top-pad" />
+      <div className="onb-head">
+        <button className="icon-btn" onClick={onBack} aria-label="Back"><Icon n="chevL" /></button>
+        <div className="onb-bar" role="progressbar" aria-valuemin="0" aria-valuemax={total} aria-valuenow={step}><i style={{ width: `${(step / total) * 100}%` }} /></div>
+        <span className="onb-count">{step}/{total}</span>
+      </div>
+      <div className="scroll">
+        <div className="onb-body stagger">
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+            <h1 className="h1">{title}</h1>
+            {sub && <p className="sub">{sub}</p>}
+          </div>
+          {children}
+        </div>
+      </div>
+      <div className="onb-foot">
+        {footerExtra}
+        <Btn onClick={cta} disabled={ctaDisabled}>{ctaLabel}</Btn>
+      </div>
+    </>
+  );
+}
+
+function Welcome({ go, toast }) {
+  return (
+    <div className="scr welcome">
+      <div className="top-pad" />
+      <div style={{ padding: '10px 24px 0', display: 'flex', justifyContent: 'center' }}><Logo /></div>
+      <div className="hero-ill">
+        <div className="orbit" style={{ width: 300, height: 300 }} />
+        <div className="orbit" style={{ width: 210, height: 210, borderStyle: 'solid', borderColor: 'rgba(8,164,179,.12)' }} />
+        <div className="mascot-float"><Buddy size={170} id="wb" /></div>
+        <div className="float-chip" style={{ left: 22, top: 44, '--r': '-6deg' }}>👋 Hello!</div>
+        <div className="float-chip" style={{ right: 20, top: 70, '--r': '5deg', animationDelay: '-1.4s', background: 'var(--sun)', color: '#5A3B00' }}><Icon n="bolt" s={16} /> +25 XP</div>
+        <div className="float-chip" style={{ left: 34, bottom: 56, '--r': '4deg', animationDelay: '-2.6s' }}><span className="cefr" style={{ fontSize: 12 }}>B1</span><Icon n="chevR" s={14} w={3} c="#8AA3A9" /><span className="cefr" style={{ fontSize: 12, background: 'var(--teal)', color: '#fff' }}>B2</span></div>
+        <div className="float-chip" style={{ right: 28, bottom: 34, '--r': '-4deg', animationDelay: '-3.4s', color: '#C24A12' }}><Icon n="flame" s={17} c="#FF7A45" /> 7 days</div>
+      </div>
+      <div className="stagger" style={{ padding: '0 24px', display: 'flex', flexDirection: 'column', gap: 10, textAlign: 'center' }}>
+        <h1 className="h1" style={{ fontSize: 34 }}>Learn English.<br /><span style={{ color: 'var(--teal)' }}>Build confidence.</span></h1>
+        <p className="sub">Your personalized English learning journey starts here.</p>
+      </div>
+      <div style={{ padding: '26px 24px 34px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <Btn onClick={() => go('goal')}>Get started</Btn>
+        <Btn kind="ghost" onClick={() => { toast('Signed in as Alex. Welcome back!', 'user'); go('home', 1, 'pop'); }}>I already have an account</Btn>
+      </div>
+    </div>
+  );
+}
+
+function GoalScreen({ ob, set, go }) {
+  return (
+    <OnbShell step={1} onBack={() => go('welcome', -1)} title="What do you want to improve?" sub="Pick the one that matters most right now." cta={() => go('level')} ctaDisabled={!ob.goal}>
+      <div className="opts" role="radiogroup">
+        {GOALS.map(g => (
+          <button key={g.id} role="radio" aria-checked={ob.goal === g.id} className={'opt' + (ob.goal === g.id ? ' sel' : '')} onClick={() => set({ goal: g.id })}>
+            <span className="ic" style={{ background: g.bg, color: g.c }}><Icon n={g.icon} /></span>
+            <span className="tx"><b>{g.label}</b><span>{g.sub}</span></span>
+            <span className="tick"><Icon n="check" s={15} w={3.4} /></span>
+          </button>
+        ))}
+      </div>
+    </OnbShell>
+  );
+}
+
+function LevelScreen({ ob, set, go }) {
+  return (
+    <OnbShell step={2} onBack={() => go('goal', -1)} title="What's your English level?" sub="Your best guess is fine." cta={() => go('daily')} ctaDisabled={!ob.level}>
+      <div className="opts" role="radiogroup">
+        {LEVELS.map((l, i) => (
+          <button key={l.id} role="radio" aria-checked={ob.level === l.id} className={'opt' + (ob.level === l.id ? ' sel' : '')} onClick={() => set({ level: l.id })}>
+            <span className="bars" aria-hidden="true">{[0, 1, 2, 3, 4].map(b => <i key={b} className={b <= i ? 'on' : ''} style={{ height: 6 + b * 4 }} />)}</span>
+            <span className="tx"><b style={{ display: 'flex', alignItems: 'center', gap: 8 }}>{l.name} <span className="cefr">{l.cefr}</span></b><span>{l.desc}</span></span>
+            <span className="tick"><Icon n="check" s={15} w={3.4} /></span>
+          </button>
+        ))}
+      </div>
+      <div className="hint"><Icon n="info" s={18} /><span>We fine-tune your level after your first practice, so nothing is locked in.</span></div>
+    </OnbShell>
+  );
+}
+
+function DailyScreen({ ob, set, go }) {
+  const hours = ob.daily ? Math.round(ob.daily * 365 / 60) : null;
+  return (
+    <OnbShell step={3} onBack={() => go('level', -1)} title="How much time can you learn each day?" sub="Small daily sessions beat long weekly ones." cta={() => go('focus')} ctaDisabled={!ob.daily}>
+      <div className="time-grid" role="radiogroup">
+        {DAILY.map(d => (
+          <button key={d.min} role="radio" aria-checked={ob.daily === d.min} className={'time' + (ob.daily === d.min ? ' sel' : '')} onClick={() => set({ daily: d.min })}>
+            {d.rec && <span className="rec">Popular</span>}
+            <span className="big">{d.min}</span><span className="unit">minutes / day</span>
+            <span className="lab">{d.label}</span>
+            <span className="tick"><Icon n="check" s={15} w={3.4} /></span>
+          </button>
+        ))}
+      </div>
+      <AutoHeight>
+        {hours ? (
+          <div className="proj morph" key={hours}>
+            <span className="num">{hours}h</span>
+            <span>of English practice a year. That is roughly one CEFR level every {ob.daily >= 15 ? '5' : ob.daily >= 10 ? '7' : '10'} months.</span>
+          </div>
+        ) : <div />}
+      </AutoHeight>
+    </OnbShell>
+  );
+}
+
+function FocusScreen({ ob, set, go }) {
+  const toggle = id => set({ focus: ob.focus.includes(id) ? ob.focus.filter(x => x !== id) : [...ob.focus, id] });
+  return (
+    <OnbShell step={4} onBack={() => go('daily', -1)} title="What would you like to focus on?" sub="Choose as many as you like." cta={() => go('name')} ctaDisabled={!ob.focus.length}
+      ctaLabel={ob.focus.length ? `Continue · ${ob.focus.length} selected` : 'Continue'}>
+      <div className="chips">
+        {FOCUS.map(f => {
+          const on = ob.focus.includes(f.id);
+          return (
+            <button key={f.id} role="checkbox" aria-checked={on} className={'fchip' + (on ? ' sel' : '')} onClick={() => toggle(f.id)}>
+              <span className="ic" style={{ background: f.bg, color: f.c }}><Icon n={f.icon} s={19} /></span>
+              {f.label}
+              <span className="tick sq"><Icon n="check" s={13} w={3.6} /></span>
+            </button>
+          );
+        })}
+      </div>
+    </OnbShell>
+  );
+}
+
+function NameScreen({ ob, set, go }) {
+  const ref = useRef(null);
+  const name = ob.name.trim();
+  useEffect(() => { const t = setTimeout(() => ref.current && ref.current.focus({ preventScroll: true }), 450); return () => clearTimeout(t); }, []);
+  const next = () => name && go('plan');
+  return (
+    <OnbShell step={5} onBack={() => go('focus', -1)} title="What should we call you?" sub="We'll use it to personalize your plan." cta={next} ctaDisabled={!name}>
+      <form className="name-field" onSubmit={e => { e.preventDefault(); next(); }}>
+        <label htmlFor="name-input" className="eyebrow" style={{ display: 'block', marginBottom: 8 }}>First name</label>
+        <div style={{ position: 'relative' }}>
+          <input id="name-input" ref={ref} className="name-input" value={ob.name} maxLength={20} placeholder="Your first name" autoComplete="given-name"
+            onChange={e => set({ name: e.target.value.replace(/^\s+/, '') })} />
+          <span className="name-count">{ob.name.length}/20</span>
+        </div>
+      </form>
+      <div className="greet">
+        <Buddy size={86} mood={name ? 'cheer' : 'happy'} id="nb" />
+        {name && <div className="bubble" key={name.length > 0}>Nice to meet you, {name}! 🎉</div>}
+      </div>
+    </OnbShell>
+  );
+}
+
+function PlanScreen({ ob, go }) {
+  const goal = GOALS.find(g => g.id === ob.goal) || GOALS[0];
+  const lvl = LEVELS.find(l => l.id === ob.level) || LEVELS[2];
+  const focus = FOCUS.filter(f => ob.focus.includes(f.id));
+  const weeks = { 5: 24, 10: 16, 15: 12, 20: 9 }[ob.daily || 10];
+  const name = ob.name.trim() || 'Alex';
+  return (
+    <div className="scr">
+      <div className="top-pad" />
+      <div className="onb-head">
+        <button className="icon-btn" onClick={() => go('name', -1)} aria-label="Back"><Icon n="chevL" /></button>
+        <div className="onb-bar"><i style={{ width: '100%' }} /></div>
+        <span className="onb-count" style={{ color: 'var(--mint)' }}><Icon n="check" s={18} w={3} /></span>
+      </div>
+      <div className="scroll">
+        <div className="onb-body stagger" style={{ gap: 16 }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            <span className="eyebrow" style={{ color: 'var(--teal)' }}>Your plan is ready</span>
+            <h1 className="h1">{name}, here's how you'll reach {lvl.next}</h1>
+          </div>
+          <div className="plan-card">
+            <div className="plan-top">
+              <Buddy size={58} mood="cheer" id="pb" />
+              <div style={{ position: 'relative', zIndex: 1 }}>
+                <div style={{ fontSize: 13, fontWeight: 700, opacity: .85 }}>Estimated time to {lvl.next}</div>
+                <div className="num" style={{ fontSize: 30, fontWeight: 800 }}>~{weeks} weeks</div>
+              </div>
+            </div>
+            <div className="plan-rows">
+              <div className="plan-row"><span className="k">Name</span><span className="v">{name}</span></div>
+              <div className="plan-row"><span className="k">Goal</span><span className="v"><span style={{ color: goal.c, display: 'grid' }}><Icon n={goal.icon} s={18} /></span>{goal.label}</span></div>
+              <div className="plan-row"><span className="k">Level</span><span className="v">{lvl.name} <span className="cefr">{lvl.cefr}</span><Icon n="chevR" s={14} w={3} c="#8AA3A9" /><span className="cefr" style={{ background: 'var(--teal)', color: '#fff' }}>{lvl.next}</span></span></div>
+              <div className="plan-row"><span className="k">Daily goal</span><span className="v">{ob.daily || 10} minutes a day</span></div>
+              <div className="plan-row"><span className="k">Focus</span><span className="v">{(focus.length ? focus : FOCUS.slice(0, 2)).map(f => <span key={f.id} className="mini-chip">{f.label}</span>)}</span></div>
+            </div>
+          </div>
+          <div className="perks">
+            <div className="perk"><span className="pi" style={{ background: 'var(--flame-50)' }}><Icon n="flame" s={20} c="#FF7A45" /></span><b>Daily streak</b><span>Practise each day to grow your flame.</span></div>
+            <div className="perk"><span className="pi" style={{ background: 'var(--sun-50)' }}><Icon n="bolt" s={20} c="#E3A20B" /></span><b>+25 XP a day</b><span>Earn XP for every practice you finish.</span></div>
+            <div className="perk"><span className="pi" style={{ background: 'var(--teal-50)', color: 'var(--teal)' }}><Icon n="target" s={20} /></span><b>{ob.daily || 10}-min goal</b><span>A daily target sized to your schedule.</span></div>
+            <div className="perk"><span className="pi" style={{ background: 'var(--violet-50)', color: 'var(--violet)' }}><Icon n="sparkle" s={20} /></span><b>Lessons for you</b><span>Built around {(focus[0] || FOCUS[0]).label.toLowerCase()}{focus[1] ? ` and ${focus[1].label.toLowerCase()}` : ''}.</span></div>
+          </div>
+        </div>
+      </div>
+      <div className="onb-foot"><Btn onClick={() => go('building')}>Start learning</Btn></div>
+    </div>
+  );
+}
+
+function Building({ ob, go }) {
+  const items = ['Understanding your goals', 'Setting your English level', 'Creating your daily goal', 'Preparing your lessons'];
+  const [done, setDone] = useState(0);
+  const name = ob.name.trim() || 'Alex';
+  useEffect(() => {
+    const ts = [900, 1800, 2700, 4100].map((t, i) => setTimeout(() => setDone(i + 1), REDUCED ? t / 4 : t));
+    ts.push(setTimeout(() => go('home', 1, 'pop'), REDUCED ? 1400 : 5000));
+    return () => ts.forEach(clearTimeout);
+  }, []);
+  const pct = useCountUp(done === 4 ? 100 : done * 24 + 4, { duration: 800 });
+  return (
+    <div className="scr build">
+      <div className="spin-ring">
+        <svg className="ring" viewBox="0 0 180 180"><circle cx="90" cy="90" r="84" fill="none" stroke="#CDEEF1" strokeWidth="4" /><circle cx="90" cy="90" r="84" fill="none" stroke="#08A4B3" strokeWidth="4" strokeLinecap="round" strokeDasharray="90 440" /></svg>
+        <div className="mascot-float"><Buddy size={116} mood={done === 4 ? 'cheer' : 'happy'} id="bb" /></div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+        <h1 className="h1" style={{ fontSize: 26 }}>{done === 4 ? `You're all set, ${name}!` : `Building your learning path, ${name}`}</h1>
+        <p className="sub num" style={{ fontWeight: 700 }}>{Math.round(pct)}%</p>
+      </div>
+      <div className="steps" aria-live="polite">
+        {items.map((t, i) => {
+          const st = i < done ? 'done' : i === done ? 'active' : '';
+          return <div key={t} className={'step ' + st}><span className="sdot">{i < done ? <Icon n="check" s={15} w={3.4} /> : i === done ? <i /> : null}</span>{t}</div>;
+        })}
+      </div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ home pieces */
+function PracticeHero({ dp, onStart, onResults, name, streakDone, daily }) {
+  const done = dp.completedToday;
+  const r = dp.result || DEFAULT_RESULT;
+  return (
+      <div className={'quest' + (done ? ' done' : '')} key={done ? 'd' : 'n'}>
+        <svg className="quest-bg" viewBox="0 0 360 300" preserveAspectRatio="xMaxYMin slice" aria-hidden="true">
+          <circle cx="330" cy="40" r="110" fill="#fff" opacity=".06" /><circle cx="330" cy="40" r="70" fill="#fff" opacity=".06" />
+          <path d="M-10 250 C 80 210, 160 290, 370 220" stroke="#fff" strokeOpacity=".07" strokeWidth="26" fill="none" />
+        </svg>
+        <div className="morph">
+          <div className="quest-top">
+            <span className="q-tag">{done ? <><Icon n="check" s={14} w={3.2} /> Done for today</> : <><Icon n="target" s={14} w={2.6} /> Today's Practice</>}</span>
+          </div>
+          {!done ? (
+            <>
+              <div className="q-mascot" style={{ right: 4, top: 30 }}><Buddy size={112} id="qb" /></div>
+              <h2 className="q-title">{dp.topic}</h2>
+              <p className="q-sub">Picked for your {dp.focusLabel.toLowerCase()} goal, {name}.</p>
+              <div className="q-meta">
+                <span className="q-pill"><Icon n="list" s={15} w={2.6} /> {dp.questionCount} questions</span>
+                <span className="q-pill"><Icon n="clock" s={15} w={2.6} /> ~{dp.estimatedMinutes} minutes</span>
+                <span className="q-pill xp"><Icon n="bolt" s={15} /> +{dp.xpReward} XP</span>
+              </div>
+              <Btn kind="white" onClick={onStart}><Icon n="play" s={18} /> Start practice</Btn>
+            </>
+          ) : (
+            <>
+              <div className="q-mascot" style={{ right: 0, top: 26 }}><Buddy size={112} mood="cheer" id="qc" /></div>
+              <h2 className="q-title">Practice complete! 🎉</h2>
+              <span className="xp-earned"><Icon n="bolt" s={15} /> +{dp.xpReward} XP earned</span>
+              <div className="q-stats">
+                <div className="q-stat"><span className="num">{r.correct}/{r.total}</span><span>Correct</span></div>
+                <div className="q-stat"><span className="num">{r.accuracy}%</span><span>Accuracy</span></div>
+                <div className="q-stat"><span className="num">{Math.round(r.seconds / 60)}m</span><span>Time</span></div>
+              </div>
+              <Btn kind="white" onClick={onResults}>View results</Btn>
+              <div className="q-foot">Streak extended. Next practice unlocks tomorrow.</div>
+            </>
+          )}
+        </div>
+      </div>
+  );
+}
+
+function ClassCard({ cls, sub, onJoin, onBook, flash }) {
+  const now = useNow(20000);
+  let body;
+  if (cls) {
+    const d = new Date(cls.time); const diff = (d - now) / 60000;
+    const t = TEACHERS[Object.keys(TEACHERS).find(k => TEACHERS[k].name === cls.teacher)] || TEACHERS.sarah;
+    let chip = null;
+    if (diff > 0 && diff < 24 * 60) chip = <span className="count-chip"><Icon n="clock" s={13} w={2.8} /> Starts in {diff >= 60 ? `${Math.floor(diff / 60)}h ${pad(Math.floor(diff % 60))}m` : `${Math.ceil(diff)} min`}</span>;
+    else if (diff <= 0 && diff > -50) chip = <span className="count-chip live"><span className="dot" /> Live now</span>;
+    body = (
+      <div className="morph" key="c">
+        <div className="sec-head"><h2 className="h2">Your next class</h2>{chip}</div>
+        <div className="class-row">
+          <div className="date-block"><span className="d1">{d.toLocaleDateString('en-US', { month: 'short' })}</span><span className="d2" style={{ fontSize: 28 }}>{d.getDate()}</span><span className="d3">{d.toLocaleDateString('en-US', { weekday: 'short' })}</span></div>
+          <div className="cls-info">
+            <span className="when">{dayLabel(d)} · {fmtTime(d)}</span>
+            <div className="teacher"><img className="t-av" src={t.av} alt="" /><div><div className="tn">{cls.teacher}</div><div className="ts">{cls.subject}</div></div></div>
+          </div>
+        </div>
+        <div style={{ marginTop: 14 }}><Btn kind="tonal" onClick={onJoin}><Icon n="video" s={18} /> Join class</Btn></div>
+      </div>
+    );
+  } else {
+    const noSub = !sub.tier; const noLessons = sub.tier && sub.lessonsRemaining === 0;
+    body = (
+      <div className="morph" key="e">
+        <div className="empty">
+          <svg className="empty-ill" viewBox="0 0 72 72" aria-hidden="true">
+            <rect x="6" y="12" width="60" height="54" rx="16" fill="#ECF8F9" />
+            <rect x="6" y="12" width="60" height="16" rx="8" fill="#CDEEF1" />
+            <rect x="20" y="6" width="6" height="14" rx="3" fill="#08A4B3" /><rect x="46" y="6" width="6" height="14" rx="3" fill="#08A4B3" />
+            <circle cx="36" cy="46" r="11" fill="#08A4B3" /><path d="M36 41v10M31 46h10" stroke="#fff" strokeWidth="3" strokeLinecap="round" />
+            <path d="M58 6l1.6 4 4 1.6-4 1.6L58 17l-1.6-3.8-4-1.6 4-1.6z" fill="#FFC23D" />
+          </svg>
+          <div><div className="t">No class scheduled</div><div className="s">Ready for your next lesson? Book a live class with a teacher.</div></div>
+        </div>
+        {(noSub || noLessons) && <div className="note" style={{ marginTop: 12 }}><Icon n="info" s={16} />{noSub ? 'Live classes come with a Skillio plan.' : '0 lessons left. Top up to book your next class.'}</div>}
+        <div style={{ marginTop: 14 }}><Btn kind="tonal" onClick={onBook}><Icon n="calPlus" s={18} /> Book a class</Btn></div>
+      </div>
+    );
+  }
+  return <section className={'card' + (flash ? ' flash' : '')} data-sec="class"><AutoHeight>{body}</AutoHeight></section>;
+}
+
+function Journey({ progress, flash }) {
+  const ref = useRef(null), pathRef = useRef(null);
+  const seen = useInView(ref);
+  const [L, setL] = useState(0);
+  useLayoutEffect(() => { if (pathRef.current) setL(pathRef.current.getTotalLength()); }, []);
+  const p = useCountUp(progress.overallProgressPercent, { duration: 1600, run: seen });
+  const pt = L && pathRef.current ? pathRef.current.getPointAtLength(L * p / 100) : { x: 40, y: 92 };
+  const ladder = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
+  const ci = ladder.indexOf(progress.currentCefrLevel);
+  const d = "M40 92 C 96 92, 104 36, 162 48 S 232 100, 286 44";
+  const milestones = [.25, .5, .75];
+  return (
+    <section className={'card' + (flash ? ' flash' : '')} data-sec="progress" ref={ref}>
+      <div className="sec-head"><h2 className="h2">Your journey</h2><span className="link" style={{ color: 'var(--ink-3)' }}>CEFR</span></div>
+      <div className="journey">
+        <svg viewBox="0 0 326 138" role="img" aria-label={`${progress.currentCefrLevel} to ${progress.nextCefrLevel}, ${progress.overallProgressPercent}% complete`}>
+          <defs><linearGradient id="jg" x1="0" x2="1"><stop offset="0" stopColor="#08A4B3" /><stop offset="1" stopColor="#23B37F" /></linearGradient></defs>
+          <path d={d} fill="none" stroke="#EAF2F3" strokeWidth="14" strokeLinecap="round" />
+          <path d={d} fill="none" stroke="#fff" strokeWidth="2" strokeDasharray="2 9" strokeLinecap="round" />
+          <path ref={pathRef} d={d} fill="none" stroke="url(#jg)" strokeWidth="14" strokeLinecap="round" strokeDasharray={L || 1} strokeDashoffset={L ? L * (1 - p / 100) : 1} />
+          {L > 0 && milestones.map(m => {
+            const q = pathRef.current.getPointAtLength(L * m); const passed = p / 100 >= m;
+            return <g key={m}><circle cx={q.x} cy={q.y} r="6.5" fill={passed ? '#fff' : '#EAF2F3'} stroke={passed ? '#08A4B3' : '#D3E2E5'} strokeWidth="3" /></g>;
+          })}
+          {/* current level medallion */}
+          <g><circle cx="40" cy="92" r="27" fill="#08A4B3" /><circle cx="40" cy="92" r="27" fill="none" stroke="#fff" strokeWidth="4" /><text x="40" y="99" textAnchor="middle" fontFamily="Bricolage Grotesque, Figtree, sans-serif" fontWeight="800" fontSize="21" fill="#fff">{progress.currentCefrLevel}</text></g>
+          {/* next level flag */}
+          <g><circle cx="286" cy="44" r="29" fill="#fff" stroke="#23B37F" strokeWidth="3.5" strokeDasharray="5 4" /><text x="286" y="51" textAnchor="middle" fontFamily="Bricolage Grotesque, Figtree, sans-serif" fontWeight="800" fontSize="21" fill="#0C2A33">{progress.nextCefrLevel}</text>
+            <path d="M300 8v20" stroke="#0C2A33" strokeWidth="2.5" strokeLinecap="round" /><path d="M300 9h14l-4 5 4 5h-14z" fill="#FFC23D" /></g>
+          {/* traveller */}
+          <g transform={`translate(${pt.x} ${pt.y})`}>
+            <g transform="translate(0 -30)">
+              <rect x="-22" y="-15" width="44" height="24" rx="9" fill="#0C2A33" />
+              <path d="M-5 9 0 15 5 9z" fill="#0C2A33" />
+              <text x="0" y="2" textAnchor="middle" fontFamily="Bricolage Grotesque, Figtree, sans-serif" fontWeight="800" fontSize="13" fill="#fff">{Math.round(p)}%</text>
+            </g>
+            <circle r="13" fill="#fff" /><clipPath id="avc"><circle r="10.5" /></clipPath>
+            <image href={AVATAR} x="-10.5" y="-10.5" width="21" height="21" clipPath="url(#avc)" />
+          </g>
+        </svg>
+      </div>
+      <div className="j-legend">
+        <div><div className="j-big">{Math.round(p)}<small>%</small></div><div style={{ fontSize: 13.5, color: 'var(--ink-2)', fontWeight: 650, marginTop: 4 }}>Overall progress to {progress.nextCefrLevel}</div></div>
+        <span className="count-chip" style={{ background: 'var(--mint-50)', color: '#157A56' }}><Icon n="flag" s={13} w={2.6} /> ~6 weeks to go</span>
+      </div>
+      <div className="ladder" aria-hidden="true">{ladder.map((l, i) => <span key={l} className={i < ci ? 'past' : i === ci ? 'cur' : i === ci + 1 ? 'next' : ''}>{l}</span>)}</div>
+    </section>
+  );
+}
+
+function SkillRing({ v, c, bg, run, delay }) {
+  const r = 22, C = 2 * Math.PI * r;
+  return (
+    <svg viewBox="0 0 52 52"><circle cx="26" cy="26" r={r} fill="none" stroke={bg} strokeWidth="6" />
+      <circle cx="26" cy="26" r={r} fill="none" stroke={c} strokeWidth="6" strokeLinecap="round" strokeDasharray={C}
+        strokeDashoffset={run ? C * (1 - v / 100) : C} style={{ transition: `stroke-dashoffset 1.2s var(--ease-out) ${delay}s` }} /></svg>
+  );
+}
+function SkillValue({ v, run }) { const x = useCountUp(v, { duration: 1200, run }); return <>{Math.round(x)}%</>; }
+
+function Skills({ s, onCheckin, flash }) {
+  const ref = useRef(null); const seen = useInView(ref);
+  const [flip, setFlip] = useState(null); const [busy, setBusy] = useState(false);
+  const empty = s.grammar == null;
+  useEffect(() => { if (!empty) setBusy(false); }, [empty]);
+  const lowest = empty ? null : SKILLS.reduce((a, b) => (s[b.k] < s[a.k] ? b : a)).k;
+  return (
+    <section className={'card' + (flash ? ' flash' : '')} data-sec="skills" ref={ref}>
+      <div className="sec-head"><h2 className="h2">Skill snapshot</h2>{!empty && <span className="link" style={{ color: 'var(--ink-3)', fontWeight: 700 }}>Tap a skill</span>}</div>
+      <AutoHeight>
+        {empty ? (
+          <div className={'skills-empty morph' + (busy ? ' analyzing' : '')} key="e">
+            <div className="ghosts">{SKILLS.map(k => <div className="ghost" key={k.k}><span className="gr">{busy ? '' : '?'}</span>{k.label.slice(0, 5) === 'Pronu' ? 'Pronunc.' : k.label}</div>)}</div>
+            <div><div className="empty" style={{ display: 'block' }}><div className="t">No skill data yet</div><div className="s">Take a quick 5-minute check-in and we'll map your grammar, vocabulary, pronunciation and speaking.</div></div></div>
+            <Btn kind="tonal" onClick={() => { setBusy(true); setTimeout(onCheckin, 1500); }} disabled={busy}>{busy ? <><span className="spinner dark" /> Analyzing your answers…</> : <><Icon n="sparkle" s={18} /> Take the check-in</>}</Btn>
+          </div>
+        ) : (
+          <div className="morph" key="d">
+            <div className="growth">
+              <div className="g-box" style={{ background: 'var(--mint-50)', color: '#157A56' }}><span className="num"><Icon n="trend" s={20} w={2.8} />+{s.overallImprovementPercent}%</span><span>Overall improvement</span></div>
+              <div className="g-box" style={{ background: 'var(--teal-50)', color: 'var(--teal-700)' }}><span className="num"><Icon n="sparkle" s={19} w={2.4} />+{s.growthPercent}%</span><span>Growth since last check-in</span></div>
+            </div>
+            <div className="skills">
+              {SKILLS.map((k, i) => (
+                <button key={k.k} className={'skill' + (flip === k.k ? ' flipped' : '')} style={{ background: flip === k.k ? k.c : k.bg + '99' }} onClick={() => setFlip(flip === k.k ? null : k.k)} aria-label={`${k.label} ${s[k.k]}%`}>
+                  <span className="front">
+                    <span className="fr"><span className="ring"><SkillRing v={s[k.k]} c={k.c} bg="#fff" run={seen} delay={i * .08} /><span className="ri" style={{ color: k.c }}><Icon n={k.icon} s={16} w={2.4} /></span></span>
+                    <span className="pc"><SkillValue v={s[k.k]} run={seen} /></span></span>
+                    <span className="nm">{k.label}</span>
+                  </span>
+                  {lowest === k.k && flip !== k.k && <span className="tag">Focus</span>}
+                  <span className="back"><b>{k.label} · {s[k.k]}%</b>{k.tip}</span>
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+      </AutoHeight>
+    </section>
+  );
+}
+
+function BadgeArt({ b, size = 52 }) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 52 52" aria-hidden="true">
+      <defs><linearGradient id={'bd' + b.id} x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor={b.c1} /><stop offset="1" stopColor={b.c2} /></linearGradient></defs>
+      <path d="M26 2l19 9v15c0 12-8 20-19 24C15 46 7 38 7 26V11z" fill={`url(#bd${b.id})`} />
+      <path d="M26 7l15 7v12c0 9.5-6.4 16-15 19.4C17.4 42 11 35.5 11 26V14z" fill="#fff" opacity=".18" />
+      <g transform="translate(15 14)" color="#fff"><Icon n={b.glyph} s={22} w={2.6} c="#fff" /></g>
+    </svg>
+  );
+}
+
+function Rewards({ g, doneToday, onBadge, flash }) {
+  const ref = useRef(null); const seen = useInView(ref);
+  const xp = useCountUp(g.xp, { duration: 1100, run: seen, from: g.xp - 120 });
+  const wk = useCountUp(g.weeklyXp, { duration: 1100, run: seen, from: 0 });
+  const days = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 6 + i); return d.toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 2); });
+  const todayIdx = 6;
+  return (
+    <section className={'card' + (flash ? ' flash' : '')} data-sec="rewards" ref={ref}>
+      <div className="sec-head">
+        <h2 className="h2" style={{ display: 'flex', alignItems: 'center', gap: 6 }}><Icon n="flame" s={22} c="#FF7A45" /> {g.streak} day streak</h2>
+        <span className="link" style={{ color: doneToday ? 'var(--mint)' : '#C24A12' }}>{doneToday ? 'Today done' : 'Practise to extend'}</span>
+      </div>
+      <div className="week">
+        {days.map((d, i) => {
+          // the last 7 days; today lights up once practice is done
+          const on = i < todayIdx || doneToday;
+          return <div key={i} className={'day' + (on ? ' on' : '') + (i === todayIdx ? ' today' : '')}>
+            <span className="db">{on ? <Icon n="flame" s={18} c="#fff" /> : i === todayIdx ? <Icon n="flame" s={18} /> : null}</span>{i === todayIdx ? 'Today' : d}</div>;
+        })}
+      </div>
+      <div className="stats3">
+        <div className="st"><span className="num">{nf.format(Math.round(xp))}</span><span>Total XP</span></div>
+        <div className="st"><span className="num">{g.level}</span><span>Level</span></div>
+        <div className="st"><span className="num">{g.badges}</span><span>Badges</span></div>
+      </div>
+      <div className="wk"><span>Weekly goal</span><span className="num" style={{ color: 'var(--ink-2)' }}>{Math.round(wk)} / {g.weeklyGoal} XP</span></div>
+      <div className="bar"><i style={{ width: seen ? `${(g.weeklyXp / g.weeklyGoal) * 100}%` : 0, background: 'linear-gradient(90deg,#FFD36A,#FFB21E)' }} /></div>
+      <div className="badges">
+        {BADGES.map(b => <button key={b.id} className={'badge' + (b.locked ? ' locked' : '')} onClick={() => onBadge(b)}><BadgeArt b={b} />{b.name}</button>)}
+      </div>
+    </section>
+  );
+}
+
+function Subscription({ sub, onManage, onTopUp, onPlans, flash }) {
+  const ref = useRef(null); const seen = useInView(ref);
+  const none = !sub.tier; const out = !none && sub.lessonsRemaining === 0;
+  let inner;
+  if (none) inner = (
+    <div className="morph sub-card" key="n">
+      <div className="sub-top">
+        <span style={{ width: 44, height: 44, borderRadius: 14, background: 'rgba(255,255,255,.1)', display: 'grid', placeItems: 'center' }}><Icon n="sparkle" s={22} c="#FFC23D" /></span>
+        <div style={{ flex: 1 }}><div className="eyebrow" style={{ color: '#8FB7BE' }}>No active plan</div><div className="h2" style={{ fontSize: 19 }}>Learn live with real teachers</div></div>
+      </div>
+      <div style={{ fontSize: 14, color: '#B9D4D8', lineHeight: 1.45 }}>Your practice, streak and XP stay free. A plan adds live classes and personal feedback.</div>
+      <Btn kind="white" className="btn-sm" onClick={onPlans}>See plans</Btn>
+    </div>
+  );
+  else inner = (
+    <div className={'morph sub-card'} key={out ? 'o' : 'a'}>
+      <div className="sub-top">
+        <span className="tier"><Icon n="crown" s={15} /> {sub.tier}</span>
+        <span style={{ flex: 1 }} />
+        <button className="link" onClick={onManage}>Manage <Icon n="chevR" s={15} w={2.8} /></button>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
+        <span className="num" style={{ fontSize: 28, fontWeight: 800, color: out ? '#B86A00' : 'var(--ink)' }}>{sub.lessonsRemaining} / {sub.totalLessons}</span>
+        <span style={{ fontWeight: 700, color: 'var(--ink-2)', fontSize: 14 }}>lessons remaining</span>
+      </div>
+      <div className="segs" aria-hidden="true">{Array.from({ length: 20 }, (_, i) => <i key={i} className={seen && i < Math.round(sub.lessonsRemaining / sub.totalLessons * 20) ? '' : 'off'} style={{ transitionDelay: `${i * 25}ms` }} />)}</div>
+      {out ? (
+        <>
+          <div className="note" style={{ background: 'var(--amber-50)', color: '#8A5200' }}><Icon n="info" s={16} />You've used every lesson this cycle. Renews Oct 28.</div>
+          <Btn kind="tonal" onClick={onTopUp}><Icon n="plus" s={18} w={2.8} /> Get more lessons</Btn>
+        </>
+      ) : <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--ink-3)' }}>Renews Oct 28 · 1 lesson per live class</div>}
+    </div>
+  );
+  return (
+    <section className={'card' + (out ? ' warn' : '') + (none ? ' none' : '') + (flash ? ' flash' : '')} style={none ? { background: 'linear-gradient(150deg,#123A45,#0C2A33)', color: '#fff', borderColor: 'transparent' } : out ? { background: 'linear-gradient(180deg,#FFF8EC,#fff)', borderColor: '#F8E3C1' } : null} data-sec="plan" ref={ref}>
+      {!none && <div className="sec-head" style={{ marginBottom: 10 }}><h2 className="h2">Your plan</h2></div>}
+      <AutoHeight>{inner}</AutoHeight>
+    </section>
+  );
+}
+
+function Home({ data, game, api, focusReq, justCompleted }) {
+  const [scrolled, setScrolled] = useState(false);
+  const [flash, setFlash] = useState(null);
+  const [bump, setBump] = useState(false);
+  const [fly, setFly] = useState(null);
+  const scrollRef = useRef(null);
+  const prevDone = useRef(data.dailyPractice.completedToday);
+  const { user, subscription, scheduledClass, progress, skillSnapshot, dailyPractice } = data;
+  const firstName = user.name;
+
+  useEffect(() => {
+    if (!focusReq || !scrollRef.current) return;
+    const el = focusReq.sec === 'top' ? null : scrollRef.current.querySelector(`[data-sec="${focusReq.sec}"]`);
+    scrollRef.current.scrollTo({ top: el ? el.offsetTop - 80 : 0, behavior: REDUCED ? 'auto' : 'smooth' });
+    setFlash(focusReq.sec); const t = setTimeout(() => setFlash(null), 1500); return () => clearTimeout(t);
+  }, [focusReq]);
+
+  // XP + streak feedback whenever today's practice flips to complete
+  useEffect(() => {
+    const was = prevDone.current; prevDone.current = dailyPractice.completedToday;
+    if (dailyPractice.completedToday && (!was || justCompleted.current)) {
+      const fromCelebrate = justCompleted.current; justCompleted.current = false;
+      const t1 = setTimeout(() => { setBump(true); setFly(Math.random()); if (!fromCelebrate) api.confetti({ y: .22 }); }, fromCelebrate ? 450 : 150);
+      const t2 = setTimeout(() => { setBump(false); setFly(null); }, 1900);
+      return () => { clearTimeout(t1); clearTimeout(t2); };
+    }
+  }, [dailyPractice.completedToday]);
+
+  return (
+    <div className="scr">
+      <div className="top-pad" />
+      <div className="scroll" ref={scrollRef} onScroll={e => setScrolled(e.currentTarget.scrollTop > 6)}>
+        <header className={'home-head' + (scrolled ? ' scrolled' : '')}>
+          <div className="avatar"><img src={user.avatarUrl} alt={`${firstName}'s avatar`} /><span className="lvl">{game.level}</span></div>
+          <div className="greet-t">
+            <h1>{greeting()}, {firstName} <span className="wave">👋</span></h1>
+          </div>
+          <button className={'streak-chip' + (bump ? ' bump' : '') + (dailyPractice.completedToday ? '' : ' pending')} onClick={() => api.focus('rewards')} aria-label={`${game.streak} day streak`}>
+            <span className="fl" style={{ display: 'grid' }}><Icon n="flame" s={20} c="#FF7A45" /></span><span className="num">{game.streak}</span>
+          </button>
+          <button className="icon-btn" aria-label="Notifications" onClick={() => api.toast('Sarah shared notes from your last class', 'bell')}><Icon n="bell" s={20} /><span className="bell-dot" /></button>
+          {fly && <div className="xp-fly" style={{ right: 70, top: 58 }} key={fly}>+{dailyPractice.xpReward} XP</div>}
+        </header>
+        <div className="home-body stagger">
+          <PracticeHero dp={dailyPractice} name={firstName} onStart={api.startPractice} onResults={() => api.sheet('results')} />
+          <ClassCard cls={scheduledClass} sub={subscription} flash={flash === 'class'} onJoin={() => api.sheet('join')} onBook={() => api.sheet('book')} />
+          <Journey progress={progress} flash={flash === 'progress'} />
+          <Skills s={skillSnapshot} flash={flash === 'skills'} onCheckin={api.checkin} />
+          <Rewards g={game} doneToday={dailyPractice.completedToday} flash={flash === 'rewards'} onBadge={b => api.sheet('badge', b)} />
+          <Subscription sub={subscription} flash={flash === 'plan'} onManage={() => api.sheet('plans')} onTopUp={() => api.sheet('topup')} onPlans={() => api.sheet('plans')} />
+        </div>
+      </div>
+      <nav className="tabbar">
+        {[['home', 'Home'], ['compass', 'Learn'], ['calendar', 'Classes'], ['user', 'Profile']].map(([ic, l], i) => (
+          <button key={l} className={'tab' + (i === 0 ? ' on' : '')} onClick={() => i === 0 ? scrollRef.current.scrollTo({ top: 0, behavior: 'smooth' }) : api.toast(`${l} is outside this prototype`, ic)} aria-current={i === 0 ? 'page' : undefined}>
+            <span className="ti"><Icon n={ic} s={21} /></span>{l}
+          </button>
+        ))}
+      </nav>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ practice flow */
+function Practice({ onExit, onFinish, xp }) {
+  const [i, setI] = useState(0); const [pick, setPick] = useState(null); const [checked, setChecked] = useState(false);
+  const [answers, setAnswers] = useState([]); const t0 = useRef(Date.now());
+  const q = QUESTIONS[i]; const ok = pick === q.r; const meta = SKILL_META[q.skill];
+  const check = () => { setChecked(true); setAnswers(a => [...a, { skill: q.skill, ok, right: q.a[q.r] }]); };
+  const next = () => {
+    if (i === QUESTIONS.length - 1) {
+      const all = answers; const correct = all.filter(a => a.ok).length; const bySkill = {};
+      all.forEach(a => { bySkill[a.skill] = bySkill[a.skill] || [0, 0]; bySkill[a.skill][1]++; if (a.ok) bySkill[a.skill][0]++; });
+      onFinish({ correct, total: all.length, seconds: Math.max(60, Math.round((Date.now() - t0.current) / 1000)), accuracy: Math.round(correct / all.length * 100), bySkill, missed: all.filter(a => !a.ok).map(a => a.right) });
+      return;
+    }
+    setI(i + 1); setPick(null); setChecked(false);
+  };
+  return (
+    <div className="scr">
+      <div className="top-pad" />
+      <div className="pr-head">
+        <button className="icon-btn" onClick={onExit} aria-label="Close practice"><Icon n="x" /></button>
+        <div className="onb-bar" style={{ height: 12 }}><i style={{ width: `${((i + (checked ? 1 : 0)) / QUESTIONS.length) * 100}%` }} /></div>
+        <span className="onb-count">{i + 1}/{QUESTIONS.length}</span>
+      </div>
+      <div className="pr-body" key={i}>
+        <div className="stagger" style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+          <span className="skill-chip" style={{ background: meta.bg, color: meta.c }}><Icon n={meta.icon} s={14} w={2.6} /> {meta.label}</span>
+          <p className="prompt">{q.q.length === 2 ? <>{q.q[0]}<span className="gap">{pick != null ? q.a[pick] : ' '}</span>{q.q[1]}</> : q.q[0]}</p>
+          <div className="ans">
+            {q.a.map((a, j) => {
+              let cls = pick === j ? 'sel' : '';
+              if (checked) cls = j === q.r ? 'right' : pick === j ? 'wrong' : '';
+              return <button key={j} className={cls} disabled={checked} onClick={() => setPick(j)} style={checked && cls === '' ? { opacity: .55 } : null}><span className="key">{'ABCD'[j]}</span>{a}</button>;
+            })}
+          </div>
+        </div>
+      </div>
+      {!checked ? (
+        <div className="onb-foot"><Btn onClick={check} disabled={pick == null}>Check</Btn></div>
+      ) : (
+        <div className={'fb ' + (ok ? 'ok' : 'no')} aria-live="polite">
+          <div className="fb-t">
+            <span className="fi" style={{ background: ok ? 'var(--mint)' : 'var(--berry)' }}><Icon n={ok ? 'check' : 'x'} s={22} w={3.2} /></span>
+            <div style={{ color: ok ? '#157A56' : '#B8264A' }}><b>{ok ? ['Nice one!', 'Spot on!', 'You got it!'][i % 3] : 'Not quite'}</b><span>{ok ? q.why : `Answer: ${q.a[q.r]}. ${q.why}`}</span></div>
+          </div>
+          <Btn kind={ok ? 'ok' : 'no'} onClick={next}>{i === QUESTIONS.length - 1 ? 'Finish' : 'Continue'}</Btn>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Celebrate({ result, xpReward, streak, onContinue, confetti }) {
+  useEffect(() => { const t = setTimeout(() => confetti({ y: .28, count: 190 }), 250); const t2 = setTimeout(() => confetti({ y: .5, x: .2, count: 70 }), 900); const t3 = setTimeout(() => confetti({ y: .5, x: .8, count: 70 }), 1100); return () => [t, t2, t3].forEach(clearTimeout); }, []);
+  const xp = useCountUp(xpReward, { duration: 1200, from: 0 });
+  return (
+    <div className="scr celebrate">
+      <div className="top-pad" />
+      <div style={{ flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 18, width: '100%' }}>
+        <div className="bounce"><div className="jump"><Buddy size={150} mood="cheer" id="cb" /></div></div>
+        <div className="stagger" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, width: '100%' }}>
+          <h1 className="h1" style={{ fontSize: 32 }}>Practice complete! 🎉</h1>
+          <div className="cel-xp num">+{Math.round(xp)} XP</div>
+          <div className="cel-streak"><span className="fl"><Icon n="flame" s={22} c="#fff" /></span>{streak} day streak! Your flame is growing.</div>
+          <div className="cel-stats">
+            <div><span className="num">{result.correct}/{result.total}</span><span>Correct</span></div>
+            <div><span className="num">{result.accuracy}%</span><span>Accuracy</span></div>
+            <div><span className="num">{fmtSecs(result.seconds).replace(/ \d+s$/, '')}</span><span>Time</span></div>
+          </div>
+        </div>
+      </div>
+      <div style={{ width: '100%' }}><Btn kind="white" onClick={onContinue}>Continue</Btn></div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ sheets */
+function Sheet({ onClose, children, label }) {
+  const [out, setOut] = useState(false);
+  const close = () => { setOut(true); setTimeout(onClose, 260); };
+  useEffect(() => { const k = e => e.key === 'Escape' && close(); window.addEventListener('keydown', k); return () => window.removeEventListener('keydown', k); }, []);
+  return (
+    <>
+      <div className={'scrim' + (out ? ' out' : '')} onClick={close} />
+      <div className={'sheet' + (out ? ' out' : '')} role="dialog" aria-label={label}>
+        <div className="grab" />
+        {typeof children === 'function' ? children(close) : children}
+      </div>
+    </>
+  );
+}
+
+function BookSheet({ sub, onBooked, onPlans, onTopUp, close }) {
+  const [sel, setSel] = useState('s1'); const [state, setState] = useState('idle');
+  const none = !sub.tier, out = !none && sub.lessonsRemaining === 0;
+  {
+    if (none || out) return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 16, alignItems: 'center', textAlign: 'center', padding: '6px 4px 0' }}>
+        <Buddy size={96} id="sb" />
+        <h2 className="h2" style={{ fontSize: 22 }}>{none ? 'Live classes need a plan' : "You're out of lessons"}</h2>
+        <p className="sub">{none ? 'Pick a plan to book 1-on-1 classes with our teachers. Your streak and XP carry over.' : 'You used all 40 lessons this cycle. Add a pack now or wait until Oct 28.'}</p>
+        <Btn onClick={() => { close(); setTimeout(none ? onPlans : onTopUp, 280); }}>{none ? 'See plans' : 'Get more lessons'}</Btn>
+      </div>
+    );
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div><h2 className="h2" style={{ fontSize: 22 }}>Book a class</h2><p className="sub" style={{ fontSize: 14 }}>Uses 1 of your {sub.lessonsRemaining} remaining lessons.</p></div>
+        {SLOTS.map(s => {
+          const d = atToday(s.day, s.h, s.m); const t = TEACHERS[s.teacher];
+          return (
+            <button key={s.id} className={'slot' + (sel === s.id ? ' sel' : '')} onClick={() => setSel(s.id)} role="radio" aria-checked={sel === s.id}>
+              <img src={t.av} alt="" style={{ width: 44, height: 44, borderRadius: '50%' }} />
+              <div style={{ flex: 1 }}><div style={{ fontWeight: 800 }}>{dayLabel(d)} · {fmtTime(d)}</div><div style={{ fontSize: 13.5, color: 'var(--ink-2)' }}>{t.name} · {s.subject}</div></div>
+              <span className="tick"><Icon n="check" s={15} w={3.4} /></span>
+            </button>
+          );
+        })}
+        <Btn disabled={state !== 'idle'} onClick={() => {
+          setState('busy');
+          setTimeout(() => { setState('done'); setTimeout(() => { const s = SLOTS.find(x => x.id === sel); close(); onBooked(s); }, 650); }, 900);
+        }}>{state === 'busy' ? <span className="spinner" /> : state === 'done' ? <><Icon n="check" s={20} w={3.2} /> Booked</> : 'Book class'}</Btn>
+      </div>
+    );
+  }
+}
+
+function ResultsSheet({ r }) {
+  const C = 2 * Math.PI * 40;
+  return (
+    <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+        <svg width="96" height="96" viewBox="0 0 96 96" style={{ transform: 'rotate(-90deg)' }}><circle cx="48" cy="48" r="40" fill="none" stroke="#E3F7EE" strokeWidth="10" /><circle cx="48" cy="48" r="40" fill="none" stroke="#23B37F" strokeWidth="10" strokeLinecap="round" strokeDasharray={C} strokeDashoffset={C * (1 - r.accuracy / 100)} style={{ animation: 'none' }} /></svg>
+        <div><div className="eyebrow">Today's results</div><div className="num" style={{ fontSize: 34, fontWeight: 800 }}>{r.correct}/{r.total}</div><div style={{ color: 'var(--ink-2)', fontWeight: 650, fontSize: 14 }}>{r.accuracy}% accuracy · {fmtSecs(r.seconds)}</div></div>
+      </div>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+        {SKILLS.map(k => { const v = r.bySkill[k.k]; if (!v) return null; return (
+          <div key={k.k} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <span style={{ width: 32, height: 32, borderRadius: 10, background: k.bg, color: k.c, display: 'grid', placeItems: 'center' }}><Icon n={k.icon} s={16} w={2.4} /></span>
+            <span style={{ flex: 1, fontWeight: 700 }}>{k.label}</span>
+            <div className="bar" style={{ width: 110, height: 10 }}><i style={{ width: `${v[0] / v[1] * 100}%`, background: k.c }} /></div>
+            <span className="num" style={{ fontWeight: 800, width: 34, textAlign: 'right' }}>{v[0]}/{v[1]}</span>
+          </div>); })}
+      </div>
+      {r.missed.length > 0 && <div className="note"><Icon n="refresh" s={16} />Added to review: {r.missed.join(', ')}</div>}
+      <div className="note" style={{ background: 'var(--sun-50)', color: '#6E4A00' }}><Icon n="bolt" s={16} c="#E3A20B" />+25 XP earned · streak extended</div>
+    </div>
+  );
+}
+
+/* ------------------------------------------------------------------ demo panel */
+const PRESETS = [
+  { id: 'scheduled', label: 'Class scheduled', patch: {}, sec: 'class' },
+  { id: 'noclass', label: 'No class scheduled', patch: { cls: false }, sec: 'class' },
+  { id: 'notdone', label: 'Practice not completed', patch: {}, sec: 'top' },
+  { id: 'done', label: 'Practice completed', patch: { practice: true }, sec: 'top' },
+  { id: 'noskills', label: 'No skill data', patch: { skills: false }, sec: 'skills' },
+  { id: 'nolessons', label: 'No lessons remaining', patch: { sub: 'empty', cls: false }, sec: 'plan' },
+  { id: 'nosub', label: 'No active subscription', patch: { sub: 'none', cls: false }, sec: 'plan' },
+];
+const DEFAULT_DEMO = { cls: true, practice: false, skills: true, sub: 'active' };
+
+function Json({ v }) {
+  const html = JSON.stringify(v, (k, x) => (k === 'avatarUrl' && typeof x === 'string' ? 'data:image/svg+xml;…' : x), 2)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/"([^"]+)":/g, '<span class="k">"$1"</span>:')
+    .replace(/: "([^"]*)"/g, ': <span class="s">"$1"</span>')
+    .replace(/: (-?\d+\.?\d*)/g, ': <span class="nm">$1</span>')
+    .replace(/: (null|true|false)/g, ': <span class="nl">$1</span>');
+  return <pre className="json" dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+function Panel({ demo, setDemo, screen, jump, preset, active, data }) {
+  const [tab, setTab] = useState('payload');
+  const T = (label, key, opts) => (
+    <div className="p-toggle"><span>{label}</span>
+      <div className="seg">{opts.map(([v, l]) => <button key={l} className={demo[key] === v ? 'on' : ''} onClick={() => setDemo(key, v)}>{l}</button>)}</div>
+    </div>
+  );
+  return (
+    <aside className="panel">
+      <div className="p-brand">
+        <Logo />
+        <h1>Home screen prototype</h1>
+        <p>Walk the full onboarding, or jump straight to Home and flip the backend data to see every state.</p>
+      </div>
+      <div className="p-card">
+        <span className="p-label">Flow</span>
+        <div className="p-row">
+          <button className={'p-btn' + (screen !== 'home' ? ' on' : '')} onClick={() => jump('welcome')}>Onboarding</button>
+          <button className={'p-btn' + (screen === 'home' ? ' on' : '')} onClick={() => jump('home')}>Home</button>
+          <button className="p-btn" onClick={() => jump('practice')}>Practice</button>
+        </div>
+      </div>
+      <div className="p-card">
+        <span className="p-label">Key states for screenshots</span>
+        <ol className="p-states">
+          {PRESETS.map((p, i) => <li key={p.id}><button className={'p-state' + (active === p.id ? ' on' : '')} onClick={() => preset(p)}><span className="n">{i + 1}</span>{p.label}</button></li>)}
+        </ol>
+      </div>
+      <div className="p-card">
+        <span className="p-label">Backend data</span>
+        {T('Class', 'cls', [[true, 'Scheduled'], [false, 'null']])}
+        {T('Practice', 'practice', [[false, 'Not done'], [true, 'Done']])}
+        {T('Skills', 'skills', [[true, 'Data'], [false, 'Empty']])}
+        {T('Plan', 'sub', [['active', 'Active'], ['empty', '0 left'], ['none', 'None']])}
+      </div>
+      <div className="p-card">
+        <div className="p-tabs"><button className={tab === 'payload' ? 'on' : ''} onClick={() => setTab('payload')}>Live payload</button><button className={tab === 'added' ? 'on' : ''} onClick={() => setTab('added')}>Added fields</button></div>
+        {tab === 'payload' ? <Json v={data} /> : (
+          <ul className="added">
+            <li><b>dailyPractice.topic, questionCount, estimatedMinutes, xpReward</b><span>The Start state needs a concrete promise: what, how long, what you earn.</span></li>
+            <li><b>dailyPractice.result</b><span>Score, accuracy, time and per-skill breakdown power the completed card and View Results.</span></li>
+            <li><b>gamification.streakDays, xp, level, weeklyXp, weeklyGoalXp, badges</b><span>Habit loop. Kept below the required sections so rewards support learning rather than compete with it.</span></li>
+            <li><b>scheduledClass.time as ISO</b><span>Lets the card show "Today · 6:30 PM" plus a live countdown.</span></li>
+            <li><b>Empty states keep every field</b><span>No skill data sends skillSnapshot values as null; no plan sends tier: null with 0 lessons. Only scheduledClass is null, as the brief specifies.</span></li>
+          </ul>
+        )}
+      </div>
+    </aside>
+  );
+}
+
+/* ------------------------------------------------------------------ app */
+function useMedia(q) { const [m, setM] = useState(() => window.matchMedia(q).matches); useEffect(() => { const mm = window.matchMedia(q); const f = () => setM(mm.matches); mm.addEventListener('change', f); return () => mm.removeEventListener('change', f); }, [q]); return m; }
+
+function App() {
+  const bleed = useMedia('(max-width: 820px)');
+  const [scale, setScale] = useState(1);
+  useEffect(() => { const f = () => setScale(Math.min(1, (window.innerHeight - 40) / 866)); f(); window.addEventListener('resize', f); return () => window.removeEventListener('resize', f); }, []);
+
+  const initial = (location.hash || '').replace('#', '') === 'home' ? 'home' : 'welcome';
+  const [nav, setNav] = useState({ cur: initial, dir: 1, anim: 'pop', key: 0 });
+  const go = useCallback((to, dir = 1, anim) => setNav(n => ({ cur: to, dir, anim: anim || (dir > 0 ? 'fwd' : 'back'), key: n.key + 1 })), []);
+  const [ob, setOb] = useState({ goal: null, level: null, daily: null, focus: [], name: '' });
+  const setObP = p => setOb(o => ({ ...o, ...p }));
+  const [demo, setDemoS] = useState(DEFAULT_DEMO);
+  const [activePreset, setActivePreset] = useState(null);
+  const [lessons, setLessons] = useState(24);
+  const [cls, setCls] = useState({ time: isoLocal(atToday(0, 18, 30)), teacher: 'Sarah Williams', subject: 'English Conversation' });
+  const [result, setResult] = useState(DEFAULT_RESULT);
+  const [toastS, setToast] = useState(null);
+  const [sheet, setSheet] = useState(null);
+  const [focusReq, setFocusReq] = useState(null);
+  const [demoOpen, setDemoOpen] = useState(false);
+  const justCompleted = useRef(false);
+  const confRef = useRef(null);
+
+  const toast = useCallback((msg, icon = 'check') => { const id = Math.random(); setToast({ msg, icon, id }); setTimeout(() => setToast(t => (t && t.id === id ? null : t)), 2600); }, []);
+  const confetti = useCallback(o => fireConfetti(confRef.current, o), []);
+  const setDemo = (k, v) => { setDemoS(d => ({ ...d, [k]: v })); setActivePreset(null); if (nav.cur !== 'home') go('home', 1, 'pop'); };
+  const preset = p => { setDemoS({ ...DEFAULT_DEMO, ...p.patch }); if (p.id === 'nolessons') { } setActivePreset(p.id); if (nav.cur !== 'home') go('home', 1, 'pop'); setTimeout(() => setFocusReq({ sec: p.sec, n: Math.random() }), nav.cur !== 'home' ? 480 : 30); setDemoOpen(false); };
+  const jump = s => { if (s === 'welcome') setOb({ goal: null, level: null, daily: null, focus: [], name: '' }); go(s, 1, 'pop'); setDemoOpen(false); };
+
+  const lvl = LEVELS.find(l => l.id === ob.level);
+  const focus = FOCUS.find(f => f.id === ob.focus[0]) || FOCUS[0];
+  const done = demo.practice;
+  const game = { streak: 7 + (done ? 1 : 0), xp: 1240 + (done ? 25 : 0), level: 12, weeklyXp: 420 + (done ? 25 : 0), weeklyGoal: 500, badges: 2 };
+  const TOPICS = { speaking: 'Small talk that flows', vocabulary: 'Words for travel days', grammar: 'Present perfect in action', listening: 'Catch the key details', pronunciation: 'Stress the right syllable' };
+
+  // backend payload — required fields exactly as specified, plus documented additions
+  const data = {
+    user: { name: ob.name.trim() || 'Alex', avatarUrl: AVATAR },
+    subscription: demo.sub === 'none' ? { tier: null, lessonsRemaining: 0, totalLessons: 0 } : { tier: 'Premium', lessonsRemaining: demo.sub === 'empty' ? 0 : lessons, totalLessons: 40 },
+    scheduledClass: demo.cls ? cls : null,
+    progress: { currentCefrLevel: lvl ? lvl.cefr : 'B1', nextCefrLevel: lvl ? lvl.next : 'B2', overallProgressPercent: 68 },
+    skillSnapshot: demo.skills
+      ? { grammar: 78, vocabulary: 64, pronunciation: 71, speaking: 58, overallImprovementPercent: 12, growthPercent: 18 }
+      : { grammar: null, vocabulary: null, pronunciation: null, speaking: null, overallImprovementPercent: null, growthPercent: null },
+    dailyPractice: { completedToday: done, topic: TOPICS[focus.id], focusLabel: focus.label, questionCount: 10, estimatedMinutes: 8, xpReward: 25, result: done ? result : null },
+    gamification: { streakDays: game.streak, xp: game.xp, level: game.level, weeklyXp: game.weeklyXp, weeklyGoalXp: game.weeklyGoal, badges: BADGES.filter(b => !b.locked).map(b => b.name) },
+  };
+
+  const api = {
+    toast, confetti,
+    focus: sec => setFocusReq({ sec, n: Math.random() }),
+    startPractice: () => go('practice'),
+    sheet: (k, arg) => setSheet({ k, arg }),
+    checkin: () => { setDemoS(d => ({ ...d, skills: true })); toast('Skill snapshot unlocked', 'sparkle'); },
+  };
+
+  const statusLight = nav.cur === 'celebrate';
+  let screenEl;
+  const common = { ob, set: setObP, go };
+  switch (nav.cur) {
+    case 'welcome': screenEl = <Welcome go={go} toast={toast} />; break;
+    case 'goal': screenEl = <GoalScreen {...common} />; break;
+    case 'level': screenEl = <LevelScreen {...common} />; break;
+    case 'daily': screenEl = <DailyScreen {...common} />; break;
+    case 'focus': screenEl = <FocusScreen {...common} />; break;
+    case 'name': screenEl = <NameScreen {...common} />; break;
+    case 'plan': screenEl = <PlanScreen {...common} />; break;
+    case 'building': screenEl = <Building {...common} />; break;
+    case 'practice': screenEl = <Practice onExit={() => go('home', -1)} onFinish={r => { setResult(r); go('celebrate', 1, 'pop'); }} />; break;
+    case 'celebrate': screenEl = <Celebrate result={result} xpReward={25} streak={8} confetti={confetti} onContinue={() => { justCompleted.current = true; setDemoS(d => ({ ...d, practice: true })); setActivePreset(null); go('home', -1, 'pop'); }} />; break;
+    default: screenEl = <Home data={data} game={game} api={api} focusReq={focusReq} justCompleted={justCompleted} />;
+  }
+  const wrapClass = nav.anim === 'pop' ? 'enter-pop' : nav.anim === 'back' ? 'enter-back' : 'enter-fwd';
+
+  let sheetEl = null;
+  if (sheet) {
+    const close = () => setSheet(null);
+    if (sheet.k === 'book') sheetEl = <Sheet onClose={close} label="Book a class">{c => <BookSheet close={c} sub={data.subscription} onPlans={() => setSheet({ k: 'plans' })} onTopUp={() => setSheet({ k: 'topup' })}
+      onBooked={s => { const d = atToday(s.day, s.h, s.m); setCls({ time: isoLocal(d), teacher: TEACHERS[s.teacher].name, subject: s.subject }); setDemoS(x => ({ ...x, cls: true })); setLessons(l => Math.max(0, l - 1)); setActivePreset(null); toast(`Booked with ${TEACHERS[s.teacher].name.split(' ')[0]} · 1 lesson used`, 'calendar'); }} />}</Sheet>;
+    if (sheet.k === 'results') sheetEl = <Sheet onClose={close} label="Results"><ResultsSheet r={result} /></Sheet>;
+    if (sheet.k === 'join') sheetEl = <Sheet onClose={close} label="Join class">{c => (
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 14, textAlign: 'center' }}>
+        <img src={(Object.values(TEACHERS).find(t => t.name === (data.scheduledClass || {}).teacher) || TEACHERS.sarah).av} alt="" style={{ width: 84, height: 84, borderRadius: '50%', boxShadow: '0 0 0 6px var(--teal-50)' }} />
+        <h2 className="h2" style={{ fontSize: 22 }}>{(data.scheduledClass || {}).subject}</h2>
+        <p className="sub">with {(data.scheduledClass || {}).teacher}. Check your mic and camera, then head in.</p>
+        <div className="p-row" style={{ width: '100%' }}>
+          <span className="note" style={{ flex: 1, justifyContent: 'center' }}><Icon n="mic" s={16} /> Mic ready</span>
+          <span className="note" style={{ flex: 1, justifyContent: 'center' }}><Icon n="video" s={16} /> Camera ready</span>
+        </div>
+        <Btn onClick={() => { c(); toast('The video room opens here in the full app', 'video'); }}>Enter classroom</Btn>
+      </div>)}</Sheet>;
+    if (sheet.k === 'badge') { const b = sheet.arg; sheetEl = <Sheet onClose={close} label={b.name}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 10, textAlign: 'center', paddingBottom: 6 }}>
+        <div className="bounce" style={b.locked ? { filter: 'grayscale(1)', opacity: .5 } : null}><BadgeArt b={b} size={110} /></div>
+        <h2 className="h2" style={{ fontSize: 22 }}>{b.name}</h2>
+        <p className="sub">{b.desc}</p>
+        <span className="mini-chip" style={b.locked ? { background: 'var(--bg)', color: 'var(--ink-2)' } : null}>{b.earned}</span>
+      </div></Sheet>; }
+    if (sheet.k === 'plans' || sheet.k === 'topup') {
+      const top = sheet.k === 'topup';
+      const opts = top ? [['10 lessons', '$39', 10], ['20 lessons', '$69', 20]] : [['Plus · 20 lessons / month', '$59/mo', 20], ['Premium · 40 lessons / month', '$99/mo', 40]];
+      sheetEl = <Sheet onClose={close} label="Plans">{c => (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <div><h2 className="h2" style={{ fontSize: 22 }}>{top ? 'Top up lessons' : 'Choose a plan'}</h2><p className="sub" style={{ fontSize: 14 }}>{top ? 'Lessons never expire. Use them for any live class.' : 'Cancel anytime. Your progress always stays yours.'}</p></div>
+          {opts.map(([n, pr, count], i) => (
+            <button key={n} className={'slot' + (i === 1 ? ' sel' : '')} onClick={() => { c(); setLessons(top ? count : 24); setDemoS(d => ({ ...d, sub: 'active' })); setActivePreset(null); toast(top ? `${count} lessons added` : 'Welcome to Premium', 'crown'); }}>
+              <span style={{ width: 44, height: 44, borderRadius: 14, display: 'grid', placeItems: 'center', background: i === 1 ? 'var(--sun-50)' : 'var(--teal-50)', color: i === 1 ? '#C98A00' : 'var(--teal)' }}><Icon n={i === 1 ? 'crown' : 'gift'} s={20} /></span>
+              <div style={{ flex: 1 }}><div style={{ fontWeight: 800 }}>{n}</div><div style={{ fontSize: 13, color: 'var(--ink-2)' }}>{i === 1 ? 'Best value' : 'Good to start'}</div></div>
+              <span className="num" style={{ fontWeight: 800 }}>{pr}</span>
+            </button>
+          ))}
+          <p style={{ fontSize: 12, color: 'var(--ink-3)', textAlign: 'center', margin: '4px 0 0' }}>Prototype: choosing an option updates the Home data.</p>
+        </div>)}</Sheet>;
+    }
+  }
+
+  const phone = (
+    <div className="phone-wrap" style={{ '--s': scale }}>
+      <div className="phone">
+        <div className="screen">
+          {!bleed && <><div className="island" /><div className={'statusbar' + (statusLight ? ' light' : '')}><span>9:41</span><span className="sb-r">
+            <svg width="18" height="12" viewBox="0 0 18 12" fill="currentColor"><rect x="0" y="8" width="3" height="4" rx="1" /><rect x="5" y="5.5" width="3" height="6.5" rx="1" /><rect x="10" y="3" width="3" height="9" rx="1" /><rect x="15" y="0" width="3" height="12" rx="1" /></svg>
+            <svg width="16" height="12" viewBox="0 0 16 12" fill="currentColor"><path d="M8 2.5c2.3 0 4.4.9 6 2.4l1.3-1.4A10.5 10.5 0 0 0 8 .5 10.5 10.5 0 0 0 .7 3.5L2 4.9a8.5 8.5 0 0 1 6-2.4zm0 4c1.2 0 2.3.5 3.2 1.2l1.3-1.4A6.5 6.5 0 0 0 8 4.5a6.5 6.5 0 0 0-4.5 1.8l1.3 1.4A4.5 4.5 0 0 1 8 6.5zm0 2.5-1.8 1.8L8 12.5l1.8-1.7z" /></svg>
+            <svg width="26" height="12" viewBox="0 0 26 12"><rect x=".5" y=".5" width="22" height="11" rx="3.5" fill="none" stroke="currentColor" opacity=".4" /><rect x="2" y="2" width="17" height="8" rx="2" fill="currentColor" /><rect x="24" y="4" width="1.6" height="4" rx=".8" fill="currentColor" opacity=".45" /></svg>
+          </span></div></>}
+          <div key={nav.key} className={'scr ' + wrapClass} style={{ background: 'transparent' }}>{screenEl}</div>
+          {sheetEl}
+          {toastS && <div className="toast" key={toastS.id} role="status"><span style={{ width: 28, height: 28, borderRadius: 9, background: 'rgba(255,255,255,.12)', display: 'grid', placeItems: 'center' }}><Icon n={toastS.icon} s={16} /></span>{toastS.msg}</div>}
+          <canvas className="confetti" ref={confRef} />
+          {!bleed && <div className={'homebar' + (statusLight ? ' light' : '')} />}
+          {bleed && <button className="demo-fab" onClick={() => setDemoOpen(true)}><Icon n="sliders" s={16} /> States</button>}
+        </div>
+      </div>
+    </div>
+  );
+  const panel = <Panel demo={demo} setDemo={setDemo} screen={nav.cur} jump={jump} preset={preset} active={activePreset} data={data} />;
+  return (
+    <div className={bleed ? 'bleed' : ''} style={{ height: '100%' }}>
+      <div className="stage">{!bleed && panel}{phone}</div>
+      {bleed && demoOpen && <div className="demo-sheet" onClick={e => e.target === e.currentTarget && setDemoOpen(false)}><div className="inner">{panel}</div></div>}
+    </div>
+  );
+}
+
+ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+</script>
+
+</body></html>

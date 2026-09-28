@@ -41,3 +41,5 @@ example
 # generated native folders
 /ios
 /android
+
+SKILLIO_BUILD_SPEC.md
