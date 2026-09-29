@@ -20,6 +20,12 @@ flow and the celebration. A short walkthrough video and the release APK are atta
 
 ---
 
+# Video Demonstration
+
+https://github.com/user-attachments/assets/7139e4e7-fca9-4321-ab75-ac0fd07fb07e
+
+
+
 ## Running it
 
 ```bash
