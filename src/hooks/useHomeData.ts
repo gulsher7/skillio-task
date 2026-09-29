@@ -26,6 +26,9 @@ export function useHomeData(): HomeData {
 
     const noPlan = home.subscription === 'none';
     const skills = home.hasSkillData ? DEFAULTS.skills : null;
+    // The coach writes an absolute score, so a session that ran before there
+    // was any skill data sets the baseline instead of adding to a default.
+    const pronunciation = skills ? (home.pronunciationLevel ?? skills.pronunciation) : null;
 
     return {
       user: {
@@ -48,7 +51,7 @@ export function useHomeData(): HomeData {
       skillSnapshot: {
         grammar: skills?.grammar ?? null,
         vocabulary: skills?.vocabulary ?? null,
-        pronunciation: skills?.pronunciation ?? null,
+        pronunciation,
         speaking: skills?.speaking ?? null,
         overallImprovementPercent: skills?.overallImprovementPercent ?? null,
         growthPercent: skills?.growthPercent ?? null,

@@ -20,6 +20,13 @@ type HomeState = {
   lessonsRemaining: number;
   /** Set on the way back from /celebrate so Home knows to play the XP flight. */
   justCelebrated: boolean;
+  /**
+   * Pronunciation as the speaking coach last left it, absolute. Null until a
+   * session has run, so the skill keeps its backend value until then.
+   */
+  pronunciationLevel: number | null;
+  /** The points a just-finished session won, for Home to fly to the ring. */
+  coachLanded: number | null;
 };
 
 const initialState: HomeState = {
@@ -31,6 +38,8 @@ const initialState: HomeState = {
   subscription: 'active',
   lessonsRemaining: DEFAULTS.lessonsRemaining,
   justCelebrated: false,
+  pronunciationLevel: null,
+  coachLanded: null,
 };
 
 const homeSlice = createSlice({
@@ -53,6 +62,22 @@ const homeSlice = createSlice({
     },
     unlockSkillSnapshot: (state) => {
       state.hasSkillData = true;
+    },
+    /**
+     * A finished coach session. Reading aloud is itself evidence of a skill, so
+     * a session run before there is any skill data unlocks the snapshot rather
+     * than being thrown away.
+     */
+    completeCoachSession: (
+      state,
+      { payload }: PayloadAction<{ level: number; delta: number }>,
+    ) => {
+      state.pronunciationLevel = payload.level;
+      state.coachLanded = payload.delta;
+      state.hasSkillData = true;
+    },
+    clearCoachLanded: (state) => {
+      state.coachLanded = null;
     },
     activatePlan: (state, { payload }: PayloadAction<number>) => {
       state.subscription = 'active';
@@ -90,6 +115,8 @@ export const {
   completePractice,
   clearCelebration,
   unlockSkillSnapshot,
+  completeCoachSession,
+  clearCoachLanded,
   activatePlan,
   topUpLessons,
   setHasClass,

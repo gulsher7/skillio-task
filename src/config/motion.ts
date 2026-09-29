@@ -21,11 +21,19 @@ export const duration = {
   journey: 1600,
 } as const;
 
-export const timing = (ms: number = duration.base): WithTimingConfig => ({
-  duration: ms,
-  easing: easeOut,
-  reduceMotion: ReduceMotion.System,
-});
+/**
+ * Marked as a worklet so it can build a config on either runtime — animations
+ * driven from inside `useAnimatedStyle` or `useDerivedValue` need it on the UI
+ * thread, and without this they fail as a remote call.
+ */
+export const timing = (ms: number = duration.base): WithTimingConfig => {
+  'worklet';
+  return {
+    duration: ms,
+    easing: easeOut,
+    reduceMotion: ReduceMotion.System,
+  };
+};
 
 /** Pops: checkmarks, badges, the streak bump. */
 export const springPop: WithSpringConfig = {

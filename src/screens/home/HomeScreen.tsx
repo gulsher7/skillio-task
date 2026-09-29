@@ -16,6 +16,7 @@ import { LanguageSheet } from '@/components/common/LanguagePicker';
 import Sheet from '@/components/common/Sheet';
 import { showToast } from '@/components/common/Toast';
 import { PRESETS } from '@/components/demo/DemoPanel';
+import CoachLayer from '@/components/coach/CoachLayer';
 import Confetti, { type ConfettiHandle } from '@/components/fx/Confetti';
 import XpFly from '@/components/fx/XpFly';
 import ClassCard from '@/components/home/ClassCard';
@@ -43,6 +44,8 @@ import {
   applyPreset,
   bookClass,
   clearCelebration,
+  clearCoachLanded,
+  completeCoachSession,
   topUpLessons,
   unlockSkillSnapshot,
 } from '@/redux/reducers/homeSlice';
@@ -71,6 +74,7 @@ export default function HomeScreen() {
   const dispatch = useAppDispatch();
   const data = useHomeData();
   const justCelebrated = useAppSelector((s) => s.home.justCelebrated);
+  const coachLanded = useAppSelector((s) => s.home.coachLanded);
   const { state: deepLinkState } = useLocalSearchParams<{ state?: string }>();
   const isFocused = usePathname() === '/home';
 
@@ -146,6 +150,26 @@ export default function HomeScreen() {
 
     return () => clearTimeout(timer);
   }, [isFocused, done, justCelebrated, dispatch, streakPulse]);
+
+  // A finished coach session shows its work: Home scrolls to the skill the
+  // session moved and pulses the ring, so the number is never updated off
+  // screen where nobody sees it happen.
+  useEffect(() => {
+    if (!isFocused || coachLanded == null) return;
+
+    const timer = setTimeout(() => {
+      focusHomeSection('skills');
+      showToast(
+        coachLanded > 0
+          ? t('coach.landedToast', { count: coachLanded })
+          : t('coach.landedToastFlat'),
+        'wave',
+      );
+      dispatch(clearCoachLanded());
+    }, 380);
+
+    return () => clearTimeout(timer);
+  }, [coachLanded, dispatch, isFocused, t]);
 
   const measure = useCallback((section: HomeSection, y: number) => {
     sectionY.current[section] = y;
@@ -263,6 +287,16 @@ export default function HomeScreen() {
       ) : null}
 
       <TabBar onHomePress={() => scrollToSection('top')} />
+
+      <CoachLayer
+        level={data.progress.currentCefrLevel}
+        pronunciation={data.skillSnapshot.pronunciation}
+        scrollY={scrollY}
+        hidden={sheet !== null}
+        onResult={(result) =>
+          dispatch(completeCoachSession({ level: result.level, delta: result.delta }))
+        }
+      />
 
       <Confetti ref={confetti} />
 
