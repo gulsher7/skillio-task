@@ -11,9 +11,12 @@ not a data one.
 
 ## Screenshots & video
 
-- `/screenshots` — the key states and the onboarding flow
-- `/recording` — short walkthrough of the app in action
-- `/build` — the release APK, if you'd rather just install it
+| Home | Speaking coach | Results (dark) | Languages |
+| --- | --- | --- | --- |
+| <img src="screenshots/07-home.png" width="200" /> | <img src="screenshots/10-speaking-coach.png" width="200" /> | <img src="screenshots/13-results-dark.png" width="200" /> | <img src="screenshots/09-home-languages.png" width="200" /> |
+
+The full set is in `/screenshots` — six onboarding screens, Home and its progress card, the practice
+flow and the celebration. A short walkthrough video and the release APK are attached to the email.
 
 ---
 
