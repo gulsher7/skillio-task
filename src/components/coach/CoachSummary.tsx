@@ -33,7 +33,12 @@ export default function CoachSummary({ result, baseline, onDone }: Props) {
   const insets = useSafeAreaInsets();
   const { t } = useTranslation();
 
-  const clean = result.attempts.filter((a) => a.takes === 1 && a.score === 100).length;
+  // Retries are separate attempts on the same line, so both of these count
+  // distinct lines — "5 lines" out of a four-line session was just wrong.
+  const lines = new Set(result.attempts.map((a) => a.lineId)).size;
+  const clean = new Set(
+    result.attempts.filter((a) => a.takes === 1 && a.score === 100).map((a) => a.lineId),
+  ).size;
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + ms(40) }]}>
@@ -58,7 +63,7 @@ export default function CoachSummary({ result, baseline, onDone }: Props) {
         <TextComp style={styles.body} center>
           {baseline
             ? t('coach.baselineBody')
-            : t('coach.summaryBody', { count: result.attempts.length })}
+            : t('coach.summaryBody', { count: lines })}
         </TextComp>
       </Animated.View>
 

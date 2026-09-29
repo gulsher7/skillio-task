@@ -21,6 +21,7 @@ import { layout } from '@/styles/tokens';
 import { firstSlip, scoreLine, summarise } from '@/utils/coachScore';
 import { haptics } from '@/utils/haptics';
 
+import CoachBackdrop from './CoachBackdrop';
 import CoachDenied from './CoachDenied';
 import CoachOrb from './CoachOrb';
 import CoachSession, { type Band } from './CoachSession';
@@ -292,6 +293,8 @@ export default function CoachLayer({
           entering={FadeIn.duration(duration.fast)}
           exiting={FadeOut.duration(200)}
         >
+          <CoachBackdrop />
+
           {phase === 'denied' ? (
             <CoachDenied onClose={closeSession} />
           ) : phase === 'summary' && result ? (
