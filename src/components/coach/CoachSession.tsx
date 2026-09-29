@@ -29,6 +29,10 @@ import WordLine from './WordLine';
 
 export type Band = { x: number; y: number; width: number };
 
+/** Dot widths, resolved at module load — scaling never changes at runtime. */
+const DOT = ms(6);
+const DOT_CURRENT = ms(18);
+
 type Props = {
   phase: CoachPhase;
   line: CoachLine;
@@ -215,7 +219,7 @@ const strip = (word: string) => word.replace(/[.,!?;:]$/, '');
 function Dot({ done, current }: { done: boolean; current: boolean }) {
   const styles = useStyles();
   const style = useAnimatedStyle(() => ({
-    width: withSpring(current ? ms(18) : ms(6), springSoft),
+    width: withSpring(current ? DOT_CURRENT : DOT, springSoft),
     opacity: withTiming(done || current ? 1 : 0.32, timing(duration.fast)),
   }));
   return <Animated.View style={[styles.dot, style]} />;

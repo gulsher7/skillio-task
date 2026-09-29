@@ -28,6 +28,9 @@ const DUCK_AFTER = ms(24);
 /** Clearance between the nudge bubble and the orb it hangs off. */
 const BUBBLE_GAP = ms(8);
 
+/** How far the bubble slides out from behind the orb. */
+const BUBBLE_SLIDE = ms(12);
+
 type Props = {
   /** Distance from the right and bottom edges to the orb's near corner. */
   right: number;
@@ -77,7 +80,7 @@ export default function CoachOrb({ right, bottom, morph, scrollY, nudge, onPress
       opacity: withTiming(hidden ? 0 : 1, timing(duration.base)),
       transform: [
         { scale: withSpring(hidden ? 0.86 : 1, springSoft) },
-        { translateX: withTiming(hidden ? ms(12) : 0, timing(duration.base)) },
+        { translateX: withTiming(hidden ? BUBBLE_SLIDE : 0, timing(duration.base)) },
       ],
     };
   });

@@ -15,6 +15,9 @@ import { radius } from '@/styles/tokens';
 /** Fraction of a word's slot spent settling, so neighbours overlap slightly. */
 const SETTLE = 1.9;
 
+/** How far a word lifts as it lands. */
+const DROP = ms(-3);
+
 type Props = {
   /** The line, split into words. */
   text: string[];
@@ -93,7 +96,7 @@ function Word({
     return {
       color: interpolateColor(p, [0, 1], [colors.ink, target]),
       // A small drop as it lands, so the sweep has weight travelling through it.
-      transform: [{ translateY: interpolate(p, [0, 0.55, 1], [0, ms(-3), 0]) }],
+      transform: [{ translateY: interpolate(p, [0, 0.55, 1], [0, DROP, 0]) }],
     };
   });
 
