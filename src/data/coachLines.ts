@@ -8,7 +8,9 @@ import type { CoachLine } from '@/models/coach';
  * `src/lang` under `coach.focus*`.
  *
  * Every line drills one sound that reliably catches learners out, and `trip`
- * marks where a first read is expected to slip. See README for why the scoring
+ * marks where a first read is expected to slip. One line per level has no trip
+ * at all — not every sentence catches you, and a session with no reachable
+ * clean read would be a session you cannot win. See README for why the scoring
  * is scripted rather than measured.
  */
 const LINES: CoachLine[] = [
@@ -32,7 +34,7 @@ const LINES: CoachLine[] = [
     level: 'A2',
     text: 'We watched a film and walked home.',
     focusKey: 'ed',
-    trip: [{ index: 2, verdict: 'close', ipa: '/wɒtʃt/', heard: '/ˈwɒtʃɪd/' }],
+    trip: [],
   },
   {
     id: 'a2-4',
@@ -75,7 +77,7 @@ const LINES: CoachLine[] = [
     level: 'B1',
     text: "I'd rather have left a little earlier.",
     focusKey: 'linking',
-    trip: [{ index: 1, verdict: 'close', ipa: '/ˈrɑːðə/', heard: '/ˈrɑːzə/' }],
+    trip: [],
   },
 
   // --- B2 ---
@@ -101,7 +103,7 @@ const LINES: CoachLine[] = [
     level: 'B2',
     text: 'Comfortable clothes are absolutely essential.',
     focusKey: 'silent',
-    trip: [{ index: 0, verdict: 'close', ipa: '/ˈkʌmftəbl/', heard: '/ˈkʌmfɔːtəbl/' }],
+    trip: [],
   },
   {
     id: 'b2-4',

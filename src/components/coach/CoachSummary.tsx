@@ -70,7 +70,9 @@ export default function CoachSummary({ result, baseline, onDone }: Props) {
       <Animated.View entering={enterDown(220)} style={styles.stats}>
         <Stat
           icon="check"
-          tint={colors.mint}
+          // A green tick over "0 lines" reads as a broken component rather than
+          // an honest score, so the tick only earns its colour once there is one.
+          tint={clean > 0 ? colors.mint : colors.disabled}
           value={t('coach.cleanCount', { count: clean })}
           label={t('coach.cleanLabel')}
         />
