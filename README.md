@@ -8,6 +8,13 @@ Home is the main deliverable. Everything else exists so Home has something hones
 
 ---
 
+# Video Refrence:
+
+
+https://github.com/user-attachments/assets/1aaffb67-16fd-46f1-bcea-640c08992866
+
+
+
 ## Running it
 
 ```bash
