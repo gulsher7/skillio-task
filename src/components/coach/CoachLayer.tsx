@@ -1,7 +1,7 @@
 import * as Speech from 'expo-speech';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { StyleSheet, useWindowDimensions, View } from 'react-native';
+import { BackHandler, StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
@@ -258,6 +258,17 @@ export default function CoachLayer({
     if (result) onResult(result);
     closeSession();
   }, [closeSession, onResult, result]);
+
+  // The session covers the screen, so Android's back gesture has to dismiss it
+  // rather than walking off Home underneath.
+  useEffect(() => {
+    if (!open) return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      closeSession();
+      return true;
+    });
+    return () => sub.remove();
+  }, [closeSession, open]);
 
   // --- nudge ---------------------------------------------------------------
 

@@ -101,13 +101,17 @@ export default function CoachSession({
 
   return (
     <View style={StyleSheet.absoluteFill}>
-      <Animated.View entering={FadeIn.duration(duration.base)} exiting={FadeOut.duration(220)}>
+      <Animated.View
+        style={StyleSheet.absoluteFill}
+        entering={FadeIn.duration(duration.base)}
+        exiting={FadeOut.duration(220)}
+      >
         <BlurView
-          intensity={scheme === 'dark' ? 40 : 28}
+          intensity={scheme === 'dark' ? 60 : 40}
           tint={scheme === 'dark' ? 'dark' : 'light'}
           style={StyleSheet.absoluteFill}
         />
-        <View style={styles.scrim} />
+        <View style={styles.wash} />
       </Animated.View>
 
       <Animated.View
@@ -270,9 +274,15 @@ function HoldMic({
 }
 
 const useStyles = makeStyles((c) => ({
-  scrim: {
+  /**
+   * Reading is the whole task here, so the backdrop is all but opaque — the
+   * blur behind it is only there to give the morph somewhere to grow out of.
+   * The shared `scrim` is dark in both themes and would bury the line.
+   */
+  wash: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: c.scrim,
+    backgroundColor: c.bg,
+    opacity: 0.94,
   },
   card: {
     ...StyleSheet.absoluteFill,
