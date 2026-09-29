@@ -119,7 +119,13 @@ export default function CoachSession({
         pointerEvents="box-none"
       >
         <View style={styles.head}>
-          <IconButton name="x" onPress={onClose} label={t('common.close')} color={colors.ink} />
+          <IconButton
+            name="x"
+            onPress={onClose}
+            label={t('common.close')}
+            color={colors.ink}
+            style={styles.close}
+          />
           <View style={styles.dots}>
             {Array.from({ length: total }, (_, i) => (
               <Dot key={i} done={i < index} current={i === index} />
@@ -296,6 +302,10 @@ const useStyles = makeStyles((c) => ({
   headSpacer: {
     width: ms(44),
   },
+  close: {
+    backgroundColor: c.subtle,
+    borderRadius: radius.pill,
+  },
   dots: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -304,7 +314,7 @@ const useStyles = makeStyles((c) => ({
   dot: {
     height: ms(6),
     borderRadius: radius.pill,
-    backgroundColor: c.onAccent,
+    backgroundColor: c.ink,
   },
   focus: {
     flexDirection: 'row',

@@ -285,7 +285,7 @@ export default function CoachLayer({
   const slip = attempt ? firstSlip(attempt) : null;
 
   return (
-    <View style={StyleSheet.absoluteFill} pointerEvents="box-none">
+    <View style={styles.root} pointerEvents="box-none">
       {open ? (
         <Animated.View
           style={StyleSheet.absoluteFill}
@@ -330,15 +330,29 @@ export default function CoachLayer({
         />
       ) : null}
 
-      <VoiceCanvas
-        ring={ring}
-        wave={wave}
-        morph={morph}
-        live={live}
-        levels={recorder.levels}
-        slide={recorder.slide}
-        opacity={canvas}
-      />
+      {!hidden || open ? (
+        <VoiceCanvas
+          ring={ring}
+          wave={wave}
+          morph={morph}
+          live={live}
+          levels={recorder.levels}
+          slide={recorder.slide}
+          opacity={canvas}
+        />
+      ) : null}
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  /**
+   * Above the sticky header, which carries `zIndex: 20` and would otherwise
+   * paint its avatar and buttons over the session — including the close button.
+   * Sheets are native modals and Toast sits at 90, so both still win.
+   */
+  root: {
+    ...StyleSheet.absoluteFill,
+    zIndex: 30,
+  },
+});
