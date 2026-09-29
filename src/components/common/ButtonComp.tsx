@@ -1,7 +1,8 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { ActivityIndicator, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors, gradients } from '@/styles/colors';
+import { useColors } from '@/styles/theme';
+import { gradients, type Palette } from '@/styles/colors';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { layout, radius, shadows } from '@/styles/tokens';
@@ -25,23 +26,27 @@ type Props = {
   accessibilityHint?: string;
 };
 
-const FOREGROUND: Record<ButtonVariant, string> = {
-  primary: colors.surface,
-  white: colors.teal700,
-  tonal: colors.teal700,
-  ghost: colors.teal700,
-  ink: colors.surface,
-  ok: colors.surface,
-  no: colors.surface,
-};
+/**
+ * `white` and `ink` are literal surfaces — they sit on gradients and stay the
+ * same in both themes, so they use the constant tokens rather than the palette.
+ */
+const foregrounds = (c: Palette): Record<ButtonVariant, string> => ({
+  primary: c.onAccent,
+  white: c.onWhite,
+  tonal: c.teal700,
+  ghost: c.teal700,
+  ink: c.onInkSurface,
+  ok: c.onAccent,
+  no: c.onAccent,
+});
 
-const BACKGROUND: Partial<Record<ButtonVariant, string>> = {
-  white: colors.surface,
-  tonal: colors.teal50,
-  ink: colors.ink,
-  ok: colors.mint,
-  no: colors.berry,
-};
+const backgrounds = (c: Palette): Partial<Record<ButtonVariant, string>> => ({
+  white: c.white,
+  tonal: c.teal50,
+  ink: c.inkSurface,
+  ok: c.mint,
+  no: c.berry,
+});
 
 const SHADOW: Record<ButtonVariant, ViewStyle> = {
   primary: shadows.primary,
@@ -70,6 +75,9 @@ export default function ButtonComp({
   style,
   accessibilityHint,
 }: Props) {
+  const colors = useColors();
+  const FOREGROUND = foregrounds(colors);
+  const BACKGROUND = backgrounds(colors);
   const inert = disabled || loading;
   const fg = inert ? colors.disabledText : FOREGROUND[variant];
   const height = HEIGHT[size];
@@ -160,10 +168,12 @@ const styles = StyleSheet.create({
   label: {
     fontFamily: fontFamily.black,
     fontSize: ms(15),
+    lineHeight: ms(19.5),
   },
   labelSm: {
     fontFamily: fontFamily.black,
     fontSize: ms(13.5),
+    lineHeight: ms(17.6),
     letterSpacing: 0.8,
   },
 });

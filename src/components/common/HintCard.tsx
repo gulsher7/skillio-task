@@ -1,7 +1,7 @@
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors } from '@/styles/colors';
 import { ms } from '@/styles/scaling';
+import { useColors } from '@/styles/theme';
 import { radius } from '@/styles/tokens';
 
 import Icon, { type IconName } from './Icon';
@@ -16,17 +16,14 @@ type Props = {
 };
 
 /** A quiet aside — reassurance, a caveat, a nudge. Never an error. */
-export default function HintCard({
-  children,
-  icon = 'info',
-  background = colors.sun50,
-  color = '#6E4A00',
-  style,
-}: Props) {
+export default function HintCard({ children, icon = 'info', background, color, style }: Props) {
+  const colors = useColors();
+  const tone = color ?? colors.amberInk;
+
   return (
-    <View style={[styles.card, { backgroundColor: background }, style]}>
-      <Icon name={icon} size={18} color={color} />
-      <TextComp variant="small" style={[styles.text, { color }]}>
+    <View style={[styles.card, { backgroundColor: background ?? colors.sun50 }, style]}>
+      <Icon name={icon} size={18} color={tone} />
+      <TextComp variant="small" style={[styles.text, { color: tone }]}>
         {children}
       </TextComp>
     </View>

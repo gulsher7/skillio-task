@@ -1,10 +1,11 @@
-import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 
 import IconTile from '@/components/common/IconTile';
 import PressableScale from '@/components/common/PressableScale';
 import TextComp from '@/components/common/TextComp';
 import { PLAN_OPTIONS, TOPUP_OPTIONS } from '@/data/mock';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
@@ -15,40 +16,44 @@ type Props = {
 };
 
 export default function PlansSheet({ mode, onChoose }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const topUp = mode === 'topup';
   const options = topUp ? TOPUP_OPTIONS : PLAN_OPTIONS;
 
   return (
     <View style={styles.root}>
       <View>
-        <TextComp variant="h2">{topUp ? 'Top up lessons' : 'Choose a plan'}</TextComp>
+        <TextComp variant="h2">{t(topUp ? 'sheets.topUp' : 'sheets.choosePlan')}</TextComp>
         <TextComp variant="small">
-          {topUp
-            ? 'Lessons never expire. Use them for any live class.'
-            : 'Cancel anytime. Your progress always stays yours.'}
+          {t(topUp ? 'sheets.topUpBody' : 'sheets.choosePlanBody')}
         </TextComp>
       </View>
 
       {options.map((option, index) => {
         const best = index === options.length - 1;
+        const name = t(option.nameKey);
         return (
           <PressableScale
             key={option.id}
             scaleTo={0.98}
-            onPress={() => onChoose(option.lessons, option.name)}
+            onPress={() => onChoose(option.lessons, name)}
             accessibilityRole="button"
-            accessibilityLabel={`${option.name}, ${option.price}`}
+            accessibilityLabel={`${name}, ${option.price}`}
             style={[styles.option, best ? styles.optionBest : null]}
           >
             <IconTile
               name={best ? 'crown' : 'gift'}
-              color={best ? '#C98A00' : colors.teal}
+              color={best ? colors.amberInk : colors.teal}
               background={best ? colors.sun50 : colors.teal50}
               radius={14}
             />
             <View style={styles.optionText}>
-              <TextComp style={styles.optionName}>{option.name}</TextComp>
-              <TextComp variant="small">{option.note}</TextComp>
+              <TextComp style={styles.optionName}>{name}</TextComp>
+              <TextComp variant="small">
+                {t(best ? 'sheets.bestValue' : 'sheets.goodToStart')}
+              </TextComp>
             </View>
             <TextComp style={styles.price}>{option.price}</TextComp>
           </PressableScale>
@@ -56,13 +61,13 @@ export default function PlansSheet({ mode, onChoose }: Props) {
       })}
 
       <TextComp variant="tiny" center>
-        Prototype: choosing an option updates the Home data.
+        {t('sheets.prototypeNote')}
       </TextComp>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: {
     gap: spacing.md,
   },
@@ -73,11 +78,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.option,
     borderWidth: 2,
-    borderColor: colors.line,
+    borderColor: c.line,
   },
   optionBest: {
-    borderColor: colors.teal,
-    backgroundColor: colors.selectedCard,
+    borderColor: c.teal,
+    backgroundColor: c.selectedCard,
   },
   optionText: {
     flex: 1,
@@ -85,12 +90,14 @@ const styles = StyleSheet.create({
   optionName: {
     fontFamily: fontFamily.black,
     fontSize: ms(14.5),
-    color: colors.ink,
+    lineHeight: ms(18.9),
+    color: c.ink,
   },
   price: {
     fontFamily: fontFamily.display,
     fontSize: ms(16),
-    color: colors.ink,
+    lineHeight: ms(20.5),
+    color: c.ink,
     fontVariant: ['tabular-nums'],
   },
-});
+}));

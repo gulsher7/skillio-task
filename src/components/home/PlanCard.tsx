@@ -1,10 +1,10 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   FadeIn,
   FadeOut,
-  LinearTransition,
   interpolateColor,
   useAnimatedStyle,
   useSharedValue,
@@ -18,10 +18,11 @@ import HintCard from '@/components/common/HintCard';
 import Icon from '@/components/common/Icon';
 import PressableScale from '@/components/common/PressableScale';
 import TextComp from '@/components/common/TextComp';
-import { duration, timing } from '@/config/motion';
+import { duration, smoothLayout, timing } from '@/config/motion';
 import { DEFAULTS } from '@/data/mock';
 import type { HomeData } from '@/models/home';
-import { colors, gradients } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
+import { gradients } from '@/styles/colors';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
@@ -45,6 +46,9 @@ export default function PlanCard({
   onSeePlans,
   highlightKey,
 }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const noPlan = !subscription.tier;
   const outOfLessons = !noPlan && subscription.lessonsRemaining === 0;
 
@@ -63,17 +67,15 @@ export default function PlanCard({
               <Icon name="sparkle" size={22} color={colors.sun} />
             </View>
             <View style={styles.darkHeading}>
-              <TextComp style={styles.darkEyebrow}>No active plan</TextComp>
-              <TextComp style={styles.darkTitle}>Learn live with real teachers</TextComp>
+              <TextComp style={styles.darkEyebrow}>{t('subscription.noPlanEyebrow')}</TextComp>
+              <TextComp style={styles.darkTitle}>{t('subscription.noPlanTitle')}</TextComp>
             </View>
           </View>
 
-          <TextComp style={styles.darkBody}>
-            Your practice, streak and XP stay free. A plan adds live classes and personal feedback.
-          </TextComp>
+          <TextComp style={styles.darkBody}>{t('subscription.noPlanBody')}</TextComp>
 
           <ButtonComp variant="white" size="sm" onPress={onSeePlans} style={styles.cta}>
-            See plans
+            {t('subscription.seePlans')}
           </ButtonComp>
         </Animated.View>
       </Card>
@@ -83,10 +85,10 @@ export default function PlanCard({
   return (
     <Card highlightKey={highlightKey} style={outOfLessons ? styles.cardWarn : undefined}>
       <View style={styles.header}>
-        <TextComp variant="title">Your plan</TextComp>
+        <TextComp variant="title">{t('subscription.title')}</TextComp>
       </View>
 
-      <Animated.View layout={LinearTransition.springify().damping(20)}>
+      <Animated.View layout={smoothLayout}>
         <Animated.View
           key={outOfLessons ? 'empty' : 'active'}
           entering={FadeIn.duration(280)}
@@ -106,10 +108,10 @@ export default function PlanCard({
             <PressableScale
               onPress={onManage}
               accessibilityRole="button"
-              accessibilityLabel="Manage your plan"
+              accessibilityLabel={t('subscription.manageA11y')}
               style={styles.manage}
             >
-              <TextComp style={styles.manageText}>Manage</TextComp>
+              <TextComp style={styles.manageText}>{t('subscription.manage')}</TextComp>
               <Icon name="chevronRight" size={15} color={colors.teal700} strokeWidth={2.8} />
             </PressableScale>
           </View>
@@ -118,7 +120,7 @@ export default function PlanCard({
             <TextComp style={[styles.count, outOfLessons ? styles.countWarn : null]}>
               {subscription.lessonsRemaining} / {subscription.totalLessons}
             </TextComp>
-            <TextComp style={styles.countLabel}>lessons remaining</TextComp>
+            <TextComp style={styles.countLabel}>{t('subscription.lessonsRemaining')}</TextComp>
           </View>
 
           <View style={styles.pips}>
@@ -138,15 +140,15 @@ export default function PlanCard({
           {outOfLessons ? (
             <>
               <HintCard background={colors.amber50} color={colors.amberInk} style={styles.note}>
-                {`You've used every lesson this cycle. Renews ${DEFAULTS.renewsOn}.`}
+                {t('subscription.outNote', { date: DEFAULTS.renewsOn })}
               </HintCard>
               <ButtonComp variant="tonal" icon="plus" onPress={onTopUp} style={styles.cta}>
-                Get more lessons
+                {t('subscription.getMore')}
               </ButtonComp>
             </>
           ) : (
             <TextComp style={styles.renews}>
-              Renews {DEFAULTS.renewsOn} · 1 lesson per live class
+              {t('subscription.renews', { date: DEFAULTS.renewsOn })}
             </TextComp>
           )}
         </Animated.View>
@@ -156,6 +158,8 @@ export default function PlanCard({
 }
 
 function Pip({ index, filled }: { index: number; filled: boolean }) {
+  const styles = useStyles();
+  const colors = useColors();
   const on = useSharedValue(0);
 
   useEffect(() => {
@@ -163,13 +167,13 @@ function Pip({ index, filled }: { index: number; filled: boolean }) {
   }, [filled, index, on]);
 
   const style = useAnimatedStyle(() => ({
-    backgroundColor: interpolateColor(on.get(), [0, 1], ['#E3ECEE', colors.teal]),
+    backgroundColor: interpolateColor(on.get(), [0, 1], [colors.track, colors.teal]),
   }));
 
   return <Animated.View style={[styles.pip, style]} />;
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   card: {
     overflow: 'hidden',
   },
@@ -177,8 +181,8 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   cardWarn: {
-    backgroundColor: '#FFFBF3',
-    borderColor: '#F8E3C1',
+    backgroundColor: c.amber50,
+    borderColor: c.amber,
   },
   header: {
     marginBottom: ms(10),
@@ -201,7 +205,8 @@ const styles = StyleSheet.create({
   tierText: {
     fontFamily: fontFamily.black,
     fontSize: ms(13),
-    color: colors.sunInk,
+    lineHeight: ms(16.9),
+    color: c.sunInk,
   },
   manage: {
     flexDirection: 'row',
@@ -213,7 +218,8 @@ const styles = StyleSheet.create({
   manageText: {
     fontFamily: fontFamily.black,
     fontSize: ms(13.5),
-    color: colors.teal700,
+    lineHeight: ms(17.6),
+    color: c.teal700,
   },
   countRow: {
     flexDirection: 'row',
@@ -224,17 +230,19 @@ const styles = StyleSheet.create({
   count: {
     fontFamily: fontFamily.display,
     fontSize: ms(28),
+    lineHeight: ms(35.8),
     letterSpacing: -0.8,
-    color: colors.ink,
+    color: c.ink,
     fontVariant: ['tabular-nums'],
   },
   countWarn: {
-    color: '#B86A00',
+    color: c.amberInk,
   },
   countLabel: {
     fontFamily: fontFamily.bold,
     fontSize: ms(14),
-    color: colors.ink2,
+    lineHeight: ms(18.2),
+    color: c.ink2,
   },
   pips: {
     flexDirection: 'row',
@@ -249,7 +257,8 @@ const styles = StyleSheet.create({
   renews: {
     fontFamily: fontFamily.semibold,
     fontSize: ms(13),
-    color: colors.ink3,
+    lineHeight: ms(16.9),
+    color: c.ink3,
     marginTop: spacing.md,
   },
   note: {
@@ -277,6 +286,7 @@ const styles = StyleSheet.create({
   darkEyebrow: {
     fontFamily: fontFamily.black,
     fontSize: ms(11.5),
+    lineHeight: ms(15),
     letterSpacing: 1.2,
     textTransform: 'uppercase',
     color: '#8FB7BE',
@@ -286,7 +296,7 @@ const styles = StyleSheet.create({
     fontSize: ms(19),
     lineHeight: ms(23),
     letterSpacing: -0.3,
-    color: colors.surface,
+    color: c.onAccent,
   },
   darkBody: {
     fontFamily: fontFamily.medium,
@@ -295,4 +305,4 @@ const styles = StyleSheet.create({
     color: '#B9D4D8',
     marginTop: spacing.md,
   },
-});
+}));

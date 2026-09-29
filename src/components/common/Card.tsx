@@ -1,5 +1,5 @@
 import { forwardRef, useEffect } from 'react';
-import { StyleSheet, View, type ViewProps } from 'react-native';
+import { View, type ViewProps } from 'react-native';
 import Animated, {
   useAnimatedStyle,
   useSharedValue,
@@ -9,7 +9,7 @@ import Animated, {
 } from 'react-native-reanimated';
 
 import { duration, timing } from '@/config/motion';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { radius, spacing } from '@/styles/tokens';
 
 type Props = ViewProps & {
@@ -21,6 +21,8 @@ type Props = ViewProps & {
 };
 
 const Card = forwardRef<View, Props>(({ style, highlightKey, children, ...rest }, ref) => {
+  const styles = useStyles();
+  const colors = useColors();
   const glow = useSharedValue(0);
 
   useEffect(() => {
@@ -48,16 +50,16 @@ const Card = forwardRef<View, Props>(({ style, highlightKey, children, ...rest }
 Card.displayName = 'Card';
 export default Card;
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   card: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderRadius: radius.card,
     borderWidth: 1,
-    borderColor: colors.line,
+    borderColor: c.line,
     padding: spacing.card,
-    shadowColor: colors.teal,
+    shadowColor: c.teal,
     shadowOpacity: 0,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 0 },
   },
-});
+}));

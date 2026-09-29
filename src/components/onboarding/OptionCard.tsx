@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 import Animated, {
   interpolate,
   interpolateColor,
@@ -13,7 +13,7 @@ import Icon from '@/components/common/Icon';
 import PressableScale from '@/components/common/PressableScale';
 import TextComp from '@/components/common/TextComp';
 import { duration, springPop, timing } from '@/config/motion';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius } from '@/styles/tokens';
@@ -43,6 +43,8 @@ export default function OptionCard({
   role = 'radio',
   style,
 }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
   const on = useSharedValue(selected ? 1 : 0);
 
   useEffect(() => {
@@ -62,7 +64,7 @@ export default function OptionCard({
   }));
 
   const tick = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(on.get(), [0, 1], ['#CFDDE0', colors.teal]),
+    borderColor: interpolateColor(on.get(), [0, 1], [colors.tickBorder, colors.teal]),
     backgroundColor: interpolateColor(on.get(), [0, 1], ['transparent', colors.teal]),
     transform: [{ scale: interpolate(on.get(), [0, 1], [1, 1.04]) }],
   }));
@@ -99,7 +101,7 @@ export default function OptionCard({
 
         <Animated.View style={[styles.tick, shape === 'square' ? styles.tickSquare : null, tick]}>
           <Animated.View style={tickIcon}>
-            <Icon name="check" size={15} color={colors.surface} strokeWidth={3.4} />
+            <Icon name="check" size={15} color={colors.onAccent} strokeWidth={3.4} />
           </Animated.View>
         </Animated.View>
       </Animated.View>
@@ -107,7 +109,7 @@ export default function OptionCard({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   card: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -131,10 +133,10 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.bold,
     fontSize: ms(16),
     lineHeight: ms(20),
-    color: colors.ink,
+    color: c.ink,
   },
   subtitle: {
-    color: colors.ink2,
+    color: c.ink2,
     lineHeight: ms(18),
   },
   tick: {
@@ -148,4 +150,4 @@ const styles = StyleSheet.create({
   tickSquare: {
     borderRadius: ms(8),
   },
-});
+}));

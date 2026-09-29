@@ -10,6 +10,7 @@ import Svg, { Circle } from 'react-native-svg';
 
 import { duration, timing } from '@/config/motion';
 import { ms } from '@/styles/scaling';
+import { useColors } from '@/styles/theme';
 
 const AnimatedCircle = Animated.createAnimatedComponent(Circle);
 
@@ -30,11 +31,12 @@ export default function Ring({
   size = 46,
   stroke = 6,
   color,
-  track = '#FFFFFF',
+  track,
   delay = 0,
   run = true,
   children,
 }: Props) {
+  const colors = useColors();
   const box = ms(size);
   const width = ms(stroke);
   const radius = (box - width) / 2;
@@ -58,7 +60,7 @@ export default function Ring({
           cx={box / 2}
           cy={box / 2}
           r={radius}
-          stroke={track}
+          stroke={track ?? colors.surface}
           strokeWidth={width}
           fill="none"
         />

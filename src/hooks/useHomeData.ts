@@ -1,9 +1,11 @@
 import { useMemo } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { STUDENT_AVATAR } from '@/data/avatars';
 import { BADGES, DEFAULTS } from '@/data/mock';
-import { FOCUS_OPTIONS, LEVELS, TOPIC_BY_FOCUS } from '@/data/onboardingOptions';
+import { FOCUS_OPTIONS, LEVELS } from '@/data/onboardingOptions';
 import type { HomeData } from '@/models/home';
+import { topicKey } from '@/utils/i18nKeys';
 import { useAppSelector } from './useRedux';
 
 const XP_PER_PRACTICE = DEFAULTS.practice.xpReward;
@@ -13,6 +15,7 @@ const XP_PER_PRACTICE = DEFAULTS.practice.xpReward;
  * touch the stores directly, so swapping in a real API later is one file.
  */
 export function useHomeData(): HomeData {
+  const { t, i18n } = useTranslation();
   const onboarding = useAppSelector((s) => s.onboarding);
   const home = useAppSelector((s) => s.home);
 
@@ -52,8 +55,8 @@ export function useHomeData(): HomeData {
       },
       dailyPractice: {
         completedToday: done,
-        topic: TOPIC_BY_FOCUS[focus.id],
-        focusLabel: focus.label,
+        topic: t(topicKey(focus.id)),
+        focusLabel: t(`focus.${focus.id}`),
         questionCount: DEFAULTS.practice.questionCount,
         estimatedMinutes: DEFAULTS.practice.estimatedMinutes,
         xpReward: XP_PER_PRACTICE,
@@ -68,5 +71,7 @@ export function useHomeData(): HomeData {
         badges: BADGES,
       },
     };
-  }, [onboarding, home]);
+    // i18n.language keeps the payload in sync when the language changes.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [onboarding, home, t, i18n.language]);
 }

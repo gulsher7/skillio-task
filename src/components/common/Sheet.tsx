@@ -11,7 +11,8 @@ import Animated, {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { duration, easeIn, springSoft, timing } from '@/config/motion';
-import { colors } from '@/styles/colors';
+import { makeStyles } from '@/styles/theme';
+
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
 
@@ -36,6 +37,7 @@ type Props = {
  * exit animation is done.
  */
 export default function Sheet({ onClose, label, children, scrollable }: Props) {
+  const styles = useStyles();
   const insets = useSafeAreaInsets();
   const { height } = useWindowDimensions();
 
@@ -119,16 +121,16 @@ export default function Sheet({ onClose, label, children, scrollable }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: {
     flex: 1,
     justifyContent: 'flex-end',
   },
   scrim: {
-    backgroundColor: 'rgba(8,30,36,0.42)',
+    backgroundColor: c.scrim,
   },
   sheet: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,
     paddingHorizontal: spacing.xl,
@@ -141,8 +143,8 @@ const styles = StyleSheet.create({
     width: ms(40),
     height: ms(5),
     borderRadius: ms(3),
-    backgroundColor: '#D5E2E5',
+    backgroundColor: c.grab,
     alignSelf: 'center',
     marginBottom: ms(6),
   },
-});
+}));

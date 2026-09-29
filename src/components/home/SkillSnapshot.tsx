@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   Easing,
   FadeIn,
   FadeOut,
-  LinearTransition,
   useAnimatedStyle,
   useReducedMotion,
   useSharedValue,
@@ -21,13 +21,14 @@ import PressableScale from '@/components/common/PressableScale';
 import Ring from '@/components/common/Ring';
 import SectionHeader from '@/components/common/SectionHeader';
 import TextComp from '@/components/common/TextComp';
-import { duration, timing } from '@/config/motion';
-import { SKILL_META, SKILL_ORDER } from '@/data/mock';
+import { duration, smoothLayout, timing } from '@/config/motion';
+import { SKILL_ICON, SKILL_ORDER } from '@/data/mock';
 import type { HomeData, SkillKey } from '@/models/home';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
+import { skillKeys } from '@/utils/i18nKeys';
 
 const ANALYSE_MS = 1500;
 const TILE_HEIGHT = ms(84);
@@ -40,6 +41,9 @@ type Props = {
 };
 
 export default function SkillSnapshot({ skills, inView, onUnlock, highlightKey }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const [flipped, setFlipped] = useState<SkillKey | null>(null);
   const empty = skills.grammar == null;
 
@@ -50,11 +54,11 @@ export default function SkillSnapshot({ skills, inView, onUnlock, highlightKey }
   return (
     <Card highlightKey={highlightKey}>
       <SectionHeader
-        title="Skill snapshot"
-        trailing={empty ? null : <TextComp variant="eyebrow">Tap a skill</TextComp>}
+        title={t('skills.title')}
+        trailing={empty ? null : <TextComp variant="eyebrow">{t('skills.tapHint')}</TextComp>}
       />
 
-      <Animated.View layout={LinearTransition.springify().damping(20)}>
+      <Animated.View layout={smoothLayout}>
         {empty ? (
           <EmptyState key="empty" onUnlock={onUnlock} />
         ) : (
@@ -66,7 +70,7 @@ export default function SkillSnapshot({ skills, inView, onUnlock, highlightKey }
             <View style={styles.growth}>
               <GrowthTile
                 value={skills.overallImprovementPercent ?? 0}
-                label="Overall improvement"
+                label={t('skills.overallImprovement')}
                 icon="trend"
                 color={colors.mintInk}
                 background={colors.mint50}
@@ -74,7 +78,7 @@ export default function SkillSnapshot({ skills, inView, onUnlock, highlightKey }
               />
               <GrowthTile
                 value={skills.growthPercent ?? 0}
-                label="Growth since last check-in"
+                label={t('skills.growth')}
                 icon="sparkle"
                 color={colors.teal700}
                 background={colors.teal50}
@@ -118,6 +122,7 @@ function GrowthTile({
   background: string;
   run: boolean;
 }) {
+  const styles = useStyles();
   return (
     <View style={[styles.growthTile, { backgroundColor: background }]}>
       <View style={styles.growthValue}>
@@ -152,7 +157,13 @@ function SkillTile({
   run: boolean;
   delay: number;
 }) {
-  const meta = SKILL_META[skill];
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
+  const tone = { color: colors.skill[skill], tint: colors.skillTint[skill] };
+  const keys = skillKeys(skill);
+  const label = t(keys.label);
+  const tip = t(keys.tip);
   const turn = useSharedValue(0);
 
   useEffect(() => {
@@ -170,7 +181,7 @@ function SkillTile({
   }));
 
   const surface = useAnimatedStyle(() => ({
-    backgroundColor: turn.get() > 0.5 ? meta.color : meta.tint,
+    backgroundColor: turn.get() > 0.5 ? tone.color : tone.tint,
   }));
 
   return (
@@ -178,14 +189,18 @@ function SkillTile({
       onPress={onPress}
       scaleTo={0.96}
       accessibilityRole="button"
-      accessibilityLabel={`${meta.label} ${percent} percent. ${flipped ? meta.tip : 'Tap for detail.'}`}
+      accessibilityLabel={t('skills.tileA11y', {
+        skill: label,
+        percent,
+        hint: flipped ? tip : t('skills.tapForDetail'),
+      })}
       style={styles.tileWrap}
     >
       <Animated.View style={[styles.tile, surface]}>
         <Animated.View style={[styles.face, front]}>
           <View style={styles.tileTop}>
-            <Ring percent={percent} color={meta.color} run={run} delay={delay}>
-              <Icon name={meta.icon} size={16} color={meta.color} strokeWidth={2.4} />
+            <Ring percent={percent} color={tone.color} run={run} delay={delay}>
+              <Icon name={SKILL_ICON[skill]} size={16} color={tone.color} strokeWidth={2.4} />
             </Ring>
             <AnimatedNumber
               value={percent}
@@ -196,20 +211,20 @@ function SkillTile({
             />
           </View>
           <TextComp style={styles.tileName} numberOfLines={1}>
-            {meta.label}
+            {label}
           </TextComp>
         </Animated.View>
 
         <Animated.View style={[styles.face, styles.faceBack, back]}>
           <TextComp style={styles.backTitle}>
-            {meta.label} · {percent}%
+            {label} · {percent}%
           </TextComp>
-          <TextComp style={styles.backTip}>{meta.tip}</TextComp>
+          <TextComp style={styles.backTip}>{tip}</TextComp>
         </Animated.View>
 
         {focus && !flipped ? (
           <View style={styles.focusTag}>
-            <TextComp style={styles.focusText}>Focus</TextComp>
+            <TextComp style={styles.focusText}>{t('skills.focusTag')}</TextComp>
           </View>
         ) : null}
       </Animated.View>
@@ -218,6 +233,9 @@ function SkillTile({
 }
 
 function EmptyState({ onUnlock }: { onUnlock: () => void }) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const reduced = useReducedMotion();
   const [analysing, setAnalysing] = useState(false);
   const spin = useSharedValue(0);
@@ -251,7 +269,7 @@ function EmptyState({ onUnlock }: { onUnlock: () => void }) {
                   cy="27"
                   r="24"
                   fill="none"
-                  stroke={analysing ? colors.teal : '#CFDFE2'}
+                  stroke={analysing ? colors.teal : colors.trackLine}
                   strokeWidth={3}
                   strokeDasharray="6 7"
                   strokeLinecap="round"
@@ -260,17 +278,16 @@ function EmptyState({ onUnlock }: { onUnlock: () => void }) {
               {analysing ? null : <TextComp style={styles.ghostMark}>?</TextComp>}
             </Animated.View>
             <TextComp style={styles.ghostLabel} numberOfLines={1}>
-              {key === 'pronunciation' ? 'Pronunc.' : SKILL_META[key].label}
+              {t(key === 'pronunciation' ? 'skills.pronunciationShort' : `skills.${key}`)}
             </TextComp>
           </View>
         ))}
       </View>
 
       <View>
-        <TextComp variant="title">No skill data yet</TextComp>
+        <TextComp variant="title">{t('skills.emptyTitle')}</TextComp>
         <TextComp variant="small" style={styles.emptyCopy}>
-          Take a quick 5-minute check-in and we&apos;ll map your grammar, vocabulary, pronunciation
-          and speaking.
+          {t('skills.emptyBody')}
         </TextComp>
       </View>
 
@@ -280,13 +297,13 @@ function EmptyState({ onUnlock }: { onUnlock: () => void }) {
         loading={analysing}
         onPress={() => setAnalysing(true)}
       >
-        {analysing ? 'Analyzing your answers…' : 'Take the check-in'}
+        {analysing ? t('skills.analysing') : t('skills.checkIn')}
       </ButtonComp>
     </Animated.View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   growth: {
     flexDirection: 'row',
     gap: ms(10),
@@ -307,6 +324,7 @@ const styles = StyleSheet.create({
   growthNumber: {
     fontFamily: fontFamily.display,
     fontSize: ms(24),
+    lineHeight: ms(30.7),
     letterSpacing: -0.6,
   },
   growthLabel: {
@@ -346,18 +364,21 @@ const styles = StyleSheet.create({
   percent: {
     fontFamily: fontFamily.display,
     fontSize: ms(22),
+    lineHeight: ms(28.2),
     letterSpacing: -0.5,
-    color: colors.ink,
+    color: c.ink,
   },
   tileName: {
     fontFamily: fontFamily.bold,
     fontSize: ms(14),
-    color: colors.ink,
+    lineHeight: ms(18.2),
+    color: c.ink,
   },
   backTitle: {
     fontFamily: fontFamily.black,
     fontSize: ms(13),
-    color: colors.surface,
+    lineHeight: ms(16.9),
+    color: c.onAccent,
   },
   backTip: {
     fontFamily: fontFamily.medium,
@@ -372,14 +393,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: ms(6),
     paddingVertical: ms(3),
     borderRadius: ms(6),
-    backgroundColor: colors.flame50,
+    backgroundColor: c.flame50,
   },
   focusText: {
     fontFamily: fontFamily.black,
     fontSize: ms(9.5),
+    lineHeight: ms(12.3),
     letterSpacing: 0.8,
     textTransform: 'uppercase',
-    color: colors.flameInk,
+    color: c.flameInk,
   },
   empty: {
     gap: spacing.base,
@@ -404,15 +426,17 @@ const styles = StyleSheet.create({
     position: 'absolute',
     fontFamily: fontFamily.display,
     fontSize: ms(18),
-    color: '#B7C9CD',
+    lineHeight: ms(23),
+    color: c.ink3,
   },
   ghostLabel: {
     fontFamily: fontFamily.bold,
     fontSize: ms(11.5),
-    color: colors.ink3,
+    lineHeight: ms(15),
+    color: c.ink3,
   },
   emptyCopy: {
     marginTop: ms(2),
     lineHeight: ms(19),
   },
-});
+}));

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 
 import Avatar from '@/components/brand/Avatar';
 import Buddy from '@/components/brand/Buddy';
@@ -9,12 +10,13 @@ import PressableScale from '@/components/common/PressableScale';
 import TextComp from '@/components/common/TextComp';
 import { TEACHERS } from '@/data/avatars';
 import { CLASS_SLOTS, type ClassSlot } from '@/data/mock';
+import { useDayLabel } from '@/hooks/useDayLabel';
 import type { HomeData } from '@/models/home';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
-import { atDayOffset, dayLabel, formatTime } from '@/utils/date';
+import { atDayOffset, formatTime } from '@/utils/date';
 
 const BOOKING_MS = 900;
 const CONFIRM_MS = 650;
@@ -34,6 +36,10 @@ export default function BookClassSheet({
   onTopUp,
   onClose,
 }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
+  const dayLabel = useDayLabel();
   const [selected, setSelected] = useState(CLASS_SLOTS[0].id);
   const [state, setState] = useState<'idle' | 'booking' | 'booked'>('idle');
 
@@ -45,12 +51,12 @@ export default function BookClassSheet({
       <View style={styles.upsell}>
         <Buddy size={96} float={false} id="book-upsell" />
         <TextComp variant="h2" center>
-          {noPlan ? 'Live classes need a plan' : "You're out of lessons"}
+          {t(noPlan ? 'sheets.needPlanTitle' : 'sheets.outTitle')}
         </TextComp>
         <TextComp variant="body" center>
           {noPlan
-            ? 'Pick a plan to book 1-on-1 classes with our teachers. Your streak and XP carry over.'
-            : `You used all ${subscription.totalLessons} lessons this cycle. Add a pack now or wait until the renewal.`}
+            ? t('sheets.needPlanBody')
+            : t('sheets.outBody', { count: subscription.totalLessons })}
         </TextComp>
         <ButtonComp
           onPress={() => {
@@ -58,7 +64,7 @@ export default function BookClassSheet({
             setTimeout(noPlan ? onSeePlans : onTopUp, 280);
           }}
         >
-          {noPlan ? 'See plans' : 'Get more lessons'}
+          {t(noPlan ? 'subscription.seePlans' : 'subscription.getMore')}
         </ButtonComp>
       </View>
     );
@@ -79,9 +85,9 @@ export default function BookClassSheet({
   return (
     <View style={styles.root}>
       <View>
-        <TextComp variant="h2">Book a class</TextComp>
+        <TextComp variant="h2">{t('sheets.bookTitle')}</TextComp>
         <TextComp variant="small">
-          Uses 1 of your {subscription.lessonsRemaining} remaining lessons.
+          {t('sheets.bookSubtitle', { count: subscription.lessonsRemaining })}
         </TextComp>
       </View>
 
@@ -98,7 +104,12 @@ export default function BookClassSheet({
               onPress={() => setSelected(slot.id)}
               accessibilityRole="radio"
               accessibilityState={{ selected: active }}
-              accessibilityLabel={`${dayLabel(at)} ${formatTime(at)} with ${teacher.name}, ${slot.subject}`}
+              accessibilityLabel={t('sheets.slotA11y', {
+                day: dayLabel(at),
+                time: formatTime(at),
+                teacher: teacher.name,
+                subject: slot.subject,
+              })}
               style={[styles.slot, active ? styles.slotActive : null]}
             >
               <Avatar uri={teacher.avatarUrl} name={teacher.name} size={44} />
@@ -126,13 +137,13 @@ export default function BookClassSheet({
         disabled={state !== 'idle'}
         icon={state === 'booked' ? 'check' : undefined}
       >
-        {state === 'booked' ? 'Booked' : 'Book class'}
+        {t(state === 'booked' ? 'sheets.booked' : 'sheets.bookCta')}
       </ButtonComp>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: {
     gap: spacing.base,
   },
@@ -146,11 +157,11 @@ const styles = StyleSheet.create({
     padding: spacing.md,
     borderRadius: radius.option,
     borderWidth: 2,
-    borderColor: colors.line,
+    borderColor: c.line,
   },
   slotActive: {
-    borderColor: colors.teal,
-    backgroundColor: colors.selectedCard,
+    borderColor: c.teal,
+    backgroundColor: c.selectedCard,
   },
   slotText: {
     flex: 1,
@@ -158,24 +169,25 @@ const styles = StyleSheet.create({
   slotWhen: {
     fontFamily: fontFamily.black,
     fontSize: ms(15),
-    color: colors.ink,
+    lineHeight: ms(19.5),
+    color: c.ink,
   },
   tick: {
     width: ms(26),
     height: ms(26),
     borderRadius: ms(13),
     borderWidth: 2,
-    borderColor: '#CFDDE0',
+    borderColor: c.tickBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
   tickOn: {
-    borderColor: colors.teal,
-    backgroundColor: colors.teal,
+    borderColor: c.teal,
+    backgroundColor: c.teal,
   },
   upsell: {
     alignItems: 'center',
     gap: spacing.lg,
     paddingTop: spacing.sm,
   },
-});
+}));

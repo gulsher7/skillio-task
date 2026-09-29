@@ -1,9 +1,9 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 import Animated, {
   FadeIn,
-  FadeInDown,
   SlideInDown,
   useAnimatedStyle,
   useSharedValue,
@@ -19,24 +19,36 @@ import IconButton from '@/components/common/IconButton';
 import PressableScale from '@/components/common/PressableScale';
 import ProgressBar from '@/components/common/ProgressBar';
 import TextComp from '@/components/common/TextComp';
-import { duration, STAGGER } from '@/config/motion';
-import { SKILL_META } from '@/data/mock';
+import { duration, easeOut, enterDown, STAGGER } from '@/config/motion';
+import { SKILL_ICON } from '@/data/mock';
 import { QUESTIONS } from '@/data/questions';
 import { useAppDispatch } from '@/hooks/useRedux';
 import type { PracticeResult, SkillKey } from '@/models/home';
 import { completePractice } from '@/redux/reducers/homeSlice';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
 import { haptics } from '@/utils/haptics';
+import { skillKeys } from '@/utils/i18nKeys';
 
 const KEYS = ['A', 'B', 'C', 'D'];
-const PRAISE = ['Nice one!', 'Spot on!', 'You got it!'];
+
+/**
+ * Non-breaking spaces, because plain spaces at the edge of a nested <Text> get
+ * trimmed and an underline over nothing draws nothing — which left the blank
+ * invisible.
+ */
+const NBSP = '\u00A0';
+const EMPTY_GAP = NBSP.repeat(7);
+const PRAISE = ['practice.praise1', 'practice.praise2', 'practice.praise3'];
 
 type Answer = { skill: SkillKey; correct: boolean; right: string };
 
 export default function PracticeScreen() {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
 
@@ -51,7 +63,7 @@ export default function PracticeScreen() {
   }, []);
 
   const question = QUESTIONS[index];
-  const meta = SKILL_META[question.skill];
+  const tone = { color: colors.skill[question.skill], tint: colors.skillTint[question.skill] };
   const isRight = picked === question.correct;
   const isLast = index === QUESTIONS.length - 1;
 
@@ -115,7 +127,7 @@ export default function PracticeScreen() {
   return (
     <View style={styles.root}>
       <View style={[styles.header, { paddingTop: insets.top + ms(4) }]}>
-        <IconButton name="x" label="Close practice" onPress={() => router.back()} />
+        <IconButton name="x" label={t('practice.close')} onPress={() => router.back()} />
         <ProgressBar
           progress={progress}
           height={ms(12)}
@@ -123,7 +135,10 @@ export default function PracticeScreen() {
           track="#DFEBED"
           animationDuration={duration.base}
           style={styles.bar}
-          accessibilityLabel={`Question ${index + 1} of ${QUESTIONS.length}`}
+          accessibilityLabel={t('practice.progressA11y', {
+            current: index + 1,
+            total: QUESTIONS.length,
+          })}
         />
         <TextComp style={styles.count}>
           {index + 1}/{QUESTIONS.length}
@@ -131,23 +146,30 @@ export default function PracticeScreen() {
       </View>
 
       <View style={styles.body} key={index}>
-        <Animated.View entering={FadeInDown.springify().damping(18)} style={styles.stack}>
-          <View style={[styles.skillChip, { backgroundColor: meta.tint }]}>
-            <Icon name={meta.icon} size={14} color={meta.color} strokeWidth={2.6} />
-            <TextComp style={[styles.skillLabel, { color: meta.color }]}>{meta.label}</TextComp>
+        <Animated.View entering={enterDown()} style={styles.stack}>
+          <View style={[styles.skillChip, { backgroundColor: tone.tint }]}>
+            <Icon
+              name={SKILL_ICON[question.skill]}
+              size={14}
+              color={tone.color}
+              strokeWidth={2.6}
+            />
+            <TextComp style={[styles.skillLabel, { color: tone.color }]}>
+              {t(skillKeys(question.skill).label)}
+            </TextComp>
           </View>
 
           <TextComp style={styles.prompt}>
-            {question.prompt.length === 2 ? (
+            {question.gapFill ? (
               <>
-                {question.prompt[0]}
-                <TextComp style={styles.gap}>
-                  {picked != null ? ` ${question.answers[picked]} ` : '          '}
+                {t(`practice.${question.id}`)}
+                <TextComp style={[styles.gap, picked == null ? styles.gapEmpty : null]}>
+                  {picked != null ? `${NBSP}${question.answers[picked]}${NBSP}` : EMPTY_GAP}
                 </TextComp>
-                {question.prompt[1]}
+                {t(`practice.${question.id}b`)}
               </>
             ) : (
-              question.prompt[0]
+              t(`practice.${question.id}`)
             )}
           </TextComp>
 
@@ -214,7 +236,7 @@ export default function PracticeScreen() {
 
       {checked ? (
         <Animated.View
-          entering={SlideInDown.springify().damping(20)}
+          entering={SlideInDown.duration(duration.base).easing(easeOut)}
           accessibilityLiveRegion="polite"
           style={[
             styles.feedback,
@@ -233,7 +255,7 @@ export default function PracticeScreen() {
               <Icon
                 name={isRight ? 'check' : 'x'}
                 size={22}
-                color={colors.surface}
+                color={colors.onAccent}
                 strokeWidth={3.2}
               />
             </Animated.View>
@@ -244,26 +266,29 @@ export default function PracticeScreen() {
                   { color: isRight ? colors.mintInk : colors.berryInk },
                 ]}
               >
-                {isRight ? PRAISE[index % PRAISE.length] : 'Not quite'}
+                {isRight ? t(PRAISE[index % PRAISE.length]) : t('practice.notQuite')}
               </TextComp>
               <TextComp
                 style={[styles.feedbackBody, { color: isRight ? colors.mintInk : colors.berryInk }]}
               >
                 {isRight
-                  ? question.why
-                  : `Answer: ${question.answers[question.correct]}. ${question.why}`}
+                  ? t(`practice.${question.id}why`)
+                  : t('practice.answerIs', {
+                      answer: question.answers[question.correct],
+                      why: t(`practice.${question.id}why`),
+                    })}
               </TextComp>
             </View>
           </View>
 
           <ButtonComp variant={isRight ? 'ok' : 'no'} onPress={advance}>
-            {isLast ? 'Finish' : 'Continue'}
+            {t(isLast ? 'practice.finish' : 'common.continue')}
           </ButtonComp>
         </Animated.View>
       ) : (
         <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
           <ButtonComp onPress={check} disabled={picked == null}>
-            Check
+            {t('practice.check')}
           </ButtonComp>
         </View>
       )}
@@ -271,10 +296,10 @@ export default function PracticeScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
   header: {
     flexDirection: 'row',
@@ -291,7 +316,8 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontFamily: fontFamily.black,
     fontSize: ms(13),
-    color: colors.ink3,
+    lineHeight: ms(16.9),
+    color: c.ink3,
     fontVariant: ['tabular-nums'],
   },
   body: {
@@ -314,6 +340,7 @@ const styles = StyleSheet.create({
   skillLabel: {
     fontFamily: fontFamily.black,
     fontSize: ms(12),
+    lineHeight: ms(15.6),
     letterSpacing: 0.9,
     textTransform: 'uppercase',
   },
@@ -322,15 +349,20 @@ const styles = StyleSheet.create({
     fontSize: ms(25),
     lineHeight: ms(32),
     letterSpacing: -0.5,
-    color: colors.ink,
+    color: c.ink,
   },
   gap: {
     fontFamily: fontFamily.displayBold,
     fontSize: ms(25),
     lineHeight: ms(32),
-    color: colors.teal700,
+    color: c.teal700,
+    backgroundColor: c.teal50,
     textDecorationLine: 'underline',
-    textDecorationColor: colors.teal200,
+    textDecorationColor: c.teal,
+  },
+  /** An unanswered blank is a tinted slot, so it reads as something to fill. */
+  gapEmpty: {
+    backgroundColor: c.teal100,
   },
   answers: {
     gap: spacing.md,
@@ -343,20 +375,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: ms(18),
     borderRadius: radius.button,
     borderWidth: 2,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
+    borderColor: c.line,
+    backgroundColor: c.surface,
   },
   answerSelected: {
-    borderColor: colors.teal,
-    backgroundColor: colors.selectedCard,
+    borderColor: c.teal,
+    backgroundColor: c.selectedCard,
   },
   answerRight: {
-    borderColor: colors.mint,
-    backgroundColor: colors.mint50,
+    borderColor: c.mint,
+    backgroundColor: c.mint50,
   },
   answerWrong: {
-    borderColor: colors.berry,
-    backgroundColor: colors.berry50,
+    borderColor: c.berry,
+    backgroundColor: c.berry50,
   },
   answerDimmed: {
     opacity: 0.55,
@@ -366,37 +398,39 @@ const styles = StyleSheet.create({
     height: ms(28),
     borderRadius: ms(9),
     borderWidth: 2,
-    borderColor: colors.line,
+    borderColor: c.line,
     alignItems: 'center',
     justifyContent: 'center',
   },
   keySelected: {
-    borderColor: colors.teal,
+    borderColor: c.teal,
   },
   keyRight: {
-    borderColor: colors.mint,
-    backgroundColor: colors.mint,
+    borderColor: c.mint,
+    backgroundColor: c.mint,
   },
   keyWrong: {
-    borderColor: colors.berry,
-    backgroundColor: colors.berry,
+    borderColor: c.berry,
+    backgroundColor: c.berry,
   },
   keyText: {
     fontFamily: fontFamily.black,
     fontSize: ms(12.5),
-    color: colors.ink3,
+    lineHeight: ms(16.2),
+    color: c.ink3,
   },
   keyTextSelected: {
-    color: colors.teal,
+    color: c.teal,
   },
   keyTextReveal: {
-    color: colors.surface,
+    color: c.onAccent,
   },
   answerText: {
     flex: 1,
     fontFamily: fontFamily.bold,
     fontSize: ms(16),
-    color: colors.ink,
+    lineHeight: ms(20.8),
+    color: c.ink,
   },
   footer: {
     paddingHorizontal: spacing.gutter,
@@ -410,10 +444,10 @@ const styles = StyleSheet.create({
     borderTopRightRadius: ms(28),
   },
   feedbackRight: {
-    backgroundColor: colors.mint50,
+    backgroundColor: c.mint50,
   },
   feedbackWrong: {
-    backgroundColor: colors.berry50,
+    backgroundColor: c.berry50,
   },
   feedbackTop: {
     flexDirection: 'row',
@@ -433,10 +467,11 @@ const styles = StyleSheet.create({
   feedbackTitle: {
     fontFamily: fontFamily.display,
     fontSize: ms(21),
+    lineHeight: ms(26.9),
   },
   feedbackBody: {
     fontFamily: fontFamily.semibold,
     fontSize: ms(14),
     lineHeight: ms(19),
   },
-});
+}));

@@ -1,5 +1,6 @@
 import { BlurView } from 'expo-blur';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   Easing,
@@ -19,11 +20,12 @@ import Icon from '@/components/common/Icon';
 import IconButton from '@/components/common/IconButton';
 import PressableScale from '@/components/common/PressableScale';
 import TextComp from '@/components/common/TextComp';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors, useTheme } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
-import { greeting } from '@/utils/date';
+import { greetingKey } from '@/utils/date';
+import { openDemoPanel } from '@/utils/demoPanel';
 
 const SCROLL_RANGE = [0, 48] as const;
 
@@ -37,6 +39,7 @@ type Props = {
   streakPulse: SharedValue<number>;
   onStreakPress: () => void;
   onBellPress: () => void;
+  onLanguagePress: () => void;
   onLayout: (event: LayoutChangeEvent) => void;
 };
 
@@ -49,8 +52,13 @@ export default function HomeHeader({
   streakPulse,
   onStreakPress,
   onBellPress,
+  onLanguagePress,
   onLayout,
 }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
+  const { scheme, toggle } = useTheme();
   const insets = useSafeAreaInsets();
   const wave = useSharedValue(0);
 
@@ -102,46 +110,85 @@ export default function HomeHeader({
   return (
     <View onLayout={onLayout} style={[styles.header, { paddingTop: insets.top + ms(6) }]}>
       <Animated.View style={[StyleSheet.absoluteFill, chrome]}>
-        <BlurView intensity={28} tint="light" style={StyleSheet.absoluteFill} />
+        <BlurView
+          intensity={28}
+          tint={scheme === 'dark' ? 'dark' : 'light'}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.wash} />
         <View style={styles.hairline} />
       </Animated.View>
 
       <Animated.View style={avatar}>
-        <Avatar uri={avatarUrl} name={name} size={46} />
-        <View style={styles.levelBadge}>
-          <TextComp style={styles.levelText}>{level}</TextComp>
-        </View>
+        {/* Long-pressing the avatar opens the dev-only state switcher. */}
+        <PressableScale
+          haptic="none"
+          scaleTo={0.94}
+          onLongPress={__DEV__ ? openDemoPanel : undefined}
+          delayLongPress={600}
+          accessible={false}
+        >
+          <Avatar uri={avatarUrl} name={name} size={46} />
+          <View style={styles.levelBadge}>
+            <TextComp style={styles.levelText}>{level}</TextComp>
+          </View>
+        </PressableScale>
       </Animated.View>
 
       <Animated.View style={[styles.titleWrap, title]}>
         <TextComp style={styles.title} numberOfLines={2}>
-          {greeting()}, {name}{' '}
+          {t('home.greeting', { greeting: t(`home.${greetingKey()}`), name })}{' '}
           <Animated.Text style={hand} accessibilityElementsHidden>
             👋
           </Animated.Text>
         </TextComp>
+
+        {/* The streak sits with the greeting: both are "here is where you are". */}
+        <PressableScale
+          onPress={onStreakPress}
+          scaleTo={0.94}
+          accessibilityRole="button"
+          accessibilityLabel={t('home.streakA11y', { count: streakDays })}
+          style={styles.streak}
+        >
+          <Animated.View style={flame}>
+            <Icon name="flame" size={15} color={colors.flame} />
+          </Animated.View>
+          <TextComp style={styles.streakCount}>
+            {t('rewards.streak', { count: streakDays })}
+          </TextComp>
+        </PressableScale>
       </Animated.View>
 
-      <PressableScale
-        onPress={onStreakPress}
-        scaleTo={0.92}
-        accessibilityRole="button"
-        accessibilityLabel={`${streakDays} day streak. Opens rewards.`}
-        style={styles.streak}
-      >
-        <Animated.View style={flame}>
-          <Icon name="flame" size={20} color={colors.flame} />
-        </Animated.View>
-        <TextComp style={styles.streakCount}>{streakDays}</TextComp>
-      </PressableScale>
-
-      <IconButton name="bell" label="Notifications" dot onPress={onBellPress} />
+      <View style={styles.actions}>
+        <IconButton
+          name="globe"
+          size={18}
+          label={t('common.language')}
+          onPress={onLanguagePress}
+          style={styles.action}
+        />
+        <IconButton
+          name={scheme === 'dark' ? 'sun' : 'moon'}
+          size={18}
+          label={t('home.appearance')}
+          onPress={toggle}
+          style={styles.action}
+        />
+        <IconButton
+          name="bell"
+          size={18}
+          label={t('home.notifications')}
+          dot
+          onPress={onBellPress}
+          style={styles.action}
+        />
+      </View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   header: {
     position: 'absolute',
     top: 0,
@@ -156,7 +203,7 @@ const styles = StyleSheet.create({
   },
   wash: {
     ...StyleSheet.absoluteFill,
-    backgroundColor: 'rgba(243,248,249,0.72)',
+    backgroundColor: c.chrome,
   },
   hairline: {
     position: 'absolute',
@@ -164,7 +211,7 @@ const styles = StyleSheet.create({
     right: 0,
     bottom: 0,
     height: StyleSheet.hairlineWidth,
-    backgroundColor: colors.line,
+    backgroundColor: c.line,
   },
   levelBadge: {
     position: 'absolute',
@@ -176,14 +223,15 @@ const styles = StyleSheet.create({
     borderRadius: ms(11),
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.violet,
+    backgroundColor: c.violet,
     borderWidth: 2.5,
-    borderColor: colors.bg,
+    borderColor: c.bg,
   },
   levelText: {
     fontFamily: fontFamily.black,
     fontSize: ms(11),
-    color: colors.surface,
+    lineHeight: ms(14.3),
+    color: c.onAccent,
     fontVariant: ['tabular-nums'],
   },
   titleWrap: {
@@ -195,22 +243,34 @@ const styles = StyleSheet.create({
     fontSize: ms(21),
     lineHeight: ms(24),
     letterSpacing: -0.5,
-    color: colors.ink,
+    color: c.ink,
   },
   streak: {
     flexDirection: 'row',
     alignItems: 'center',
+    alignSelf: 'flex-start',
     gap: ms(4),
-    height: ms(40),
-    paddingLeft: ms(9),
-    paddingRight: ms(12),
-    borderRadius: radius.md,
-    backgroundColor: colors.flame50,
+    marginTop: ms(4),
+    paddingLeft: ms(7),
+    paddingRight: ms(9),
+    paddingVertical: ms(3),
+    borderRadius: radius.chip,
+    backgroundColor: c.flame50,
   },
   streakCount: {
-    fontFamily: fontFamily.display,
-    fontSize: ms(16),
-    color: colors.flameInk,
+    fontFamily: fontFamily.black,
+    fontSize: ms(12),
+    lineHeight: ms(15.6),
+    color: c.flameInk,
     fontVariant: ['tabular-nums'],
   },
-});
+  actions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: ms(6),
+  },
+  action: {
+    width: ms(38),
+    height: ms(38),
+  },
+}));

@@ -1,6 +1,7 @@
-import { StyleSheet, Text, type TextProps, type TextStyle } from 'react-native';
+import { Text, type TextProps, type TextStyle } from 'react-native';
 
-import { colors } from '@/styles/colors';
+import { makeStyles } from '@/styles/theme';
+
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 
@@ -16,6 +17,8 @@ type Props = TextProps & {
 };
 
 export default function TextComp({ variant = 'body', color, font, center, style, ...rest }: Props) {
+  const styles = useStyles();
+
   return (
     <Text
       {...rest}
@@ -32,45 +35,45 @@ export default function TextComp({ variant = 'body', color, font, center, style,
 
 const tabular: TextStyle = { fontVariant: ['tabular-nums'] };
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   h1: {
     fontFamily: fontFamily.display,
     fontSize: ms(30),
     lineHeight: ms(33),
     letterSpacing: -0.6,
-    color: colors.ink,
+    color: c.ink,
   },
   h2: {
     fontFamily: fontFamily.displayBold,
     fontSize: ms(20),
     lineHeight: ms(23),
     letterSpacing: -0.3,
-    color: colors.ink,
+    color: c.ink,
   },
   title: {
     fontFamily: fontFamily.displayBold,
     fontSize: ms(18),
     lineHeight: ms(21),
     letterSpacing: -0.2,
-    color: colors.ink,
+    color: c.ink,
   },
   body: {
     fontFamily: fontFamily.medium,
     fontSize: ms(15.5),
     lineHeight: ms(22),
-    color: colors.ink2,
+    color: c.ink2,
   },
   small: {
     fontFamily: fontFamily.medium,
     fontSize: ms(13.5),
     lineHeight: ms(18),
-    color: colors.ink2,
+    color: c.ink2,
   },
   tiny: {
     fontFamily: fontFamily.semibold,
     fontSize: ms(12.5),
     lineHeight: ms(16),
-    color: colors.ink3,
+    color: c.ink3,
   },
   eyebrow: {
     fontFamily: fontFamily.black,
@@ -78,20 +81,22 @@ const styles = StyleSheet.create({
     lineHeight: ms(14),
     letterSpacing: 1.2,
     textTransform: 'uppercase',
-    color: colors.ink3,
+    color: c.ink3,
   },
   button: {
     fontFamily: fontFamily.black,
     fontSize: ms(15),
+    lineHeight: ms(19.5),
     letterSpacing: 1,
     textTransform: 'uppercase',
-    color: colors.surface,
+    color: c.surface,
   },
   num: {
     fontFamily: fontFamily.display,
     fontSize: ms(20),
+    lineHeight: ms(25.6),
     letterSpacing: -0.4,
-    color: colors.ink,
+    color: c.ink,
     ...tabular,
   },
-});
+}));

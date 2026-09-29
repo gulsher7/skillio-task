@@ -12,11 +12,9 @@ export type PracticeResult = {
   missed: string[];
 };
 
+/** Copy lives in the locale files under `rewards.badge*`, keyed off `id`. */
 export type Badge = {
-  id: string;
-  name: string;
-  description: string;
-  earnedLabel: string;
+  id: 'streak' | 'words' | 'voice';
   locked?: boolean;
   glyph: 'flame' | 'book' | 'mic';
   colors: [string, string];

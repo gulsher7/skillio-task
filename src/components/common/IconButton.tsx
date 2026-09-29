@@ -1,6 +1,6 @@
-import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import { View, type StyleProp, type ViewStyle } from 'react-native';
 
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { ms } from '@/styles/scaling';
 import { radius } from '@/styles/tokens';
 
@@ -19,6 +19,8 @@ type Props = {
 };
 
 export default function IconButton({ name, onPress, label, size = 20, color, dot, style }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
   return (
     <PressableScale
       onPress={onPress}
@@ -35,16 +37,16 @@ export default function IconButton({ name, onPress, label, size = 20, color, dot
 
 const SIZE = ms(42);
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   button: {
     width: SIZE,
     height: SIZE,
     borderRadius: radius.md,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: colors.line,
+    borderColor: c.line,
   },
   dot: {
     position: 'absolute',
@@ -53,8 +55,8 @@ const styles = StyleSheet.create({
     width: ms(9),
     height: ms(9),
     borderRadius: ms(4.5),
-    backgroundColor: colors.berry,
+    backgroundColor: c.berry,
     borderWidth: 2,
-    borderColor: colors.surface,
+    borderColor: c.surface,
   },
-});
+}));

@@ -1,17 +1,19 @@
-import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 
 import HintCard from '@/components/common/HintCard';
 import Icon from '@/components/common/Icon';
 import ProgressBar from '@/components/common/ProgressBar';
 import Ring from '@/components/common/Ring';
 import TextComp from '@/components/common/TextComp';
-import { SKILL_META, SKILL_ORDER } from '@/data/mock';
+import { SKILL_ICON, SKILL_ORDER } from '@/data/mock';
 import type { PracticeResult } from '@/models/home';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
 import { formatDuration } from '@/utils/date';
+import { skillKeys } from '@/utils/i18nKeys';
 
 type Props = {
   result: PracticeResult;
@@ -19,6 +21,10 @@ type Props = {
 };
 
 export default function ResultsSheet({ result, xpReward }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
+
   return (
     <View style={styles.root}>
       <View style={styles.summary}>
@@ -30,12 +36,15 @@ export default function ResultsSheet({ result, xpReward }: Props) {
           track={colors.mint50}
         />
         <View style={styles.summaryText}>
-          <TextComp variant="eyebrow">Today&apos;s results</TextComp>
+          <TextComp variant="eyebrow">{t('sheets.resultsEyebrow')}</TextComp>
           <TextComp style={styles.score}>
             {result.correct}/{result.total}
           </TextComp>
           <TextComp variant="small" style={styles.meta}>
-            {result.accuracy}% accuracy · {formatDuration(result.seconds)}
+            {t('sheets.resultsMeta', {
+              accuracy: result.accuracy,
+              time: formatDuration(result.seconds),
+            })}
           </TextComp>
         </View>
       </View>
@@ -44,16 +53,16 @@ export default function ResultsSheet({ result, xpReward }: Props) {
         {SKILL_ORDER.map((key) => {
           const score = result.bySkill[key];
           if (!score) return null;
-          const meta = SKILL_META[key];
+          const tone = { color: colors.skill[key], tint: colors.skillTint[key] };
           return (
             <View key={key} style={styles.skillRow}>
-              <View style={[styles.skillIcon, { backgroundColor: meta.tint }]}>
-                <Icon name={meta.icon} size={16} color={meta.color} strokeWidth={2.4} />
+              <View style={[styles.skillIcon, { backgroundColor: tone.tint }]}>
+                <Icon name={SKILL_ICON[key]} size={16} color={tone.color} strokeWidth={2.4} />
               </View>
-              <TextComp style={styles.skillName}>{meta.label}</TextComp>
+              <TextComp style={styles.skillName}>{t(skillKeys(key).label)}</TextComp>
               <ProgressBar
                 progress={score[0] / score[1]}
-                color={meta.color}
+                color={tone.color}
                 height={ms(10)}
                 style={styles.skillBar}
               />
@@ -67,18 +76,18 @@ export default function ResultsSheet({ result, xpReward }: Props) {
 
       {result.missed.length ? (
         <HintCard icon="refresh" background={colors.bg} color={colors.ink2}>
-          {`Added to review: ${result.missed.join(', ')}`}
+          {t('sheets.addedToReview', { items: result.missed.join(', ') })}
         </HintCard>
       ) : null}
 
       <HintCard icon="bolt" background={colors.sun50} color="#6E4A00">
-        {`+${xpReward} XP earned · streak extended`}
+        {t('sheets.xpEarnedStreak', { count: xpReward })}
       </HintCard>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: {
     gap: spacing.lg,
     paddingBottom: spacing.sm,
@@ -94,12 +103,13 @@ const styles = StyleSheet.create({
   score: {
     fontFamily: fontFamily.display,
     fontSize: ms(34),
+    lineHeight: ms(43.5),
     letterSpacing: -1,
-    color: colors.ink,
+    color: c.ink,
     fontVariant: ['tabular-nums'],
   },
   meta: {
-    color: colors.ink2,
+    color: c.ink2,
   },
   skills: {
     gap: spacing.md,
@@ -120,7 +130,8 @@ const styles = StyleSheet.create({
     flex: 1,
     fontFamily: fontFamily.bold,
     fontSize: ms(14),
-    color: colors.ink,
+    lineHeight: ms(18.2),
+    color: c.ink,
   },
   skillBar: {
     width: ms(100),
@@ -130,7 +141,8 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontFamily: fontFamily.display,
     fontSize: ms(14),
-    color: colors.ink,
+    lineHeight: ms(17.9),
+    color: c.ink,
     fontVariant: ['tabular-nums'],
   },
-});
+}));

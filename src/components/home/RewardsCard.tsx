@@ -1,5 +1,6 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
@@ -19,10 +20,12 @@ import SectionHeader from '@/components/common/SectionHeader';
 import TextComp from '@/components/common/TextComp';
 import { duration, springPop, timing } from '@/config/motion';
 import type { Badge, HomeData } from '@/models/home';
-import { colors, gradients } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
+import { gradients } from '@/styles/colors';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
+import { badgeKeys } from '@/utils/i18nKeys';
 import { lastSevenDays } from '@/utils/date';
 
 const XP_STEP = 25;
@@ -42,17 +45,20 @@ export default function RewardsCard({
   onBadgePress,
   highlightKey,
 }: Props) {
-  const days = lastSevenDays();
+  const styles = useStyles();
+  const colors = useColors();
+  const { t, i18n } = useTranslation();
+  const days = lastSevenDays(i18n.language);
   const earnedBadges = game.badges.filter((b) => !b.locked).length;
 
   return (
     <Card highlightKey={highlightKey}>
       <SectionHeader
-        title={`${game.streakDays} day streak`}
+        title={t('rewards.streak', { count: game.streakDays })}
         leading={<Icon name="flame" size={22} color={colors.flame} />}
         trailing={
           <TextComp style={[styles.status, { color: doneToday ? colors.mint : colors.flameInk }]}>
-            {doneToday ? 'Today done' : 'Practise to extend'}
+            {doneToday ? t('rewards.todayDone') : t('rewards.practiseToExtend')}
           </TextComp>
         }
       />
@@ -63,7 +69,7 @@ export default function RewardsCard({
           return (
             <DayTile
               key={`${label}-${index}`}
-              label={isToday ? 'Today' : label}
+              label={isToday ? t('rewards.today') : label}
               lit={isToday ? doneToday : true}
               isToday={isToday}
             />
@@ -80,20 +86,20 @@ export default function RewardsCard({
             grouped
             style={styles.statValue}
           />
-          <TextComp style={styles.statLabel}>Total XP</TextComp>
+          <TextComp style={styles.statLabel}>{t('rewards.totalXp')}</TextComp>
         </Stat>
         <Stat>
           <TextComp style={styles.statValue}>{game.level}</TextComp>
-          <TextComp style={styles.statLabel}>Level</TextComp>
+          <TextComp style={styles.statLabel}>{t('rewards.level')}</TextComp>
         </Stat>
         <Stat>
           <TextComp style={styles.statValue}>{earnedBadges}</TextComp>
-          <TextComp style={styles.statLabel}>Badges</TextComp>
+          <TextComp style={styles.statLabel}>{t('rewards.badges')}</TextComp>
         </Stat>
       </View>
 
       <View style={styles.weeklyRow}>
-        <TextComp style={styles.weeklyLabel}>Weekly goal</TextComp>
+        <TextComp style={styles.weeklyLabel}>{t('rewards.weeklyGoal')}</TextComp>
         <View style={styles.weeklyValue}>
           <AnimatedNumber
             value={game.weeklyXp}
@@ -101,41 +107,52 @@ export default function RewardsCard({
             run={inView}
             style={[styles.weeklyNumber, styles.weeklyCount]}
           />
-          <TextComp style={styles.weeklyNumber}> / {game.weeklyGoalXp} XP</TextComp>
+          <TextComp style={styles.weeklyNumber}>
+            {' '}
+            {t('rewards.weeklyValue', { goal: game.weeklyGoalXp })}
+          </TextComp>
         </View>
       </View>
       <ProgressBar
         progress={game.weeklyXp / game.weeklyGoalXp}
         gradient={gradients.xpBar}
         delay={inView ? 120 : 0}
-        accessibilityLabel={`Weekly goal, ${game.weeklyXp} of ${game.weeklyGoalXp} XP`}
+        accessibilityLabel={t('rewards.weeklyA11y', {
+          current: game.weeklyXp,
+          goal: game.weeklyGoalXp,
+        })}
       />
 
       <View style={styles.badges}>
-        {game.badges.map((badge) => (
-          <PressableScale
-            key={badge.id}
-            onPress={() => onBadgePress(badge)}
-            scaleTo={0.93}
-            accessibilityRole="button"
-            accessibilityLabel={`${badge.name}. ${badge.earnedLabel}`}
-            style={styles.badge}
-          >
-            <BadgeArt badge={badge} />
-            <TextComp
-              style={[styles.badgeName, badge.locked ? styles.badgeNameLocked : null]}
-              numberOfLines={2}
+        {game.badges.map((badge) => {
+          const keys = badgeKeys(badge);
+          return (
+            <PressableScale
+              key={badge.id}
+              onPress={() => onBadgePress(badge)}
+              scaleTo={0.93}
+              accessibilityRole="button"
+              accessibilityLabel={`${t(keys.name)}. ${t(keys.earned)}`}
+              style={styles.badge}
             >
-              {badge.name}
-            </TextComp>
-          </PressableScale>
-        ))}
+              <BadgeArt badge={badge} />
+              <TextComp
+                style={[styles.badgeName, badge.locked ? styles.badgeNameLocked : null]}
+                numberOfLines={2}
+              >
+                {t(keys.name)}
+              </TextComp>
+            </PressableScale>
+          );
+        })}
       </View>
     </Card>
   );
 }
 
 function DayTile({ label, lit, isToday }: { label: string; lit: boolean; isToday: boolean }) {
+  const styles = useStyles();
+  const colors = useColors();
   const ignite = useSharedValue(lit && isToday ? 1 : 0);
 
   useEffect(() => {
@@ -173,7 +190,7 @@ function DayTile({ label, lit, isToday }: { label: string; lit: boolean; isToday
             style={StyleSheet.absoluteFill}
           />
         ) : null}
-        {lit ? <Icon name="flame" size={18} color={colors.surface} /> : null}
+        {lit ? <Icon name="flame" size={18} color={colors.onAccent} /> : null}
         {!lit && isToday ? <Icon name="flame" size={18} color={colors.flame} /> : null}
       </Animated.View>
       <TextComp style={[styles.dayLabel, isToday ? styles.dayLabelToday : null]}>{label}</TextComp>
@@ -182,13 +199,15 @@ function DayTile({ label, lit, isToday }: { label: string; lit: boolean; isToday
 }
 
 function Stat({ children }: { children: React.ReactNode }) {
+  const styles = useStyles();
   return <View style={styles.stat}>{children}</View>;
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   status: {
     fontFamily: fontFamily.black,
     fontSize: ms(13.5),
+    lineHeight: ms(17.6),
   },
   week: {
     flexDirection: 'row',
@@ -207,23 +226,24 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     overflow: 'hidden',
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
   dayOff: {
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
   dayToday: {
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 2,
-    borderColor: colors.flame,
+    borderColor: c.flame,
   },
   dayLabel: {
     fontFamily: fontFamily.black,
     fontSize: ms(11.5),
-    color: colors.ink3,
+    lineHeight: ms(15),
+    color: c.ink3,
   },
   dayLabelToday: {
-    color: colors.ink,
+    color: c.ink,
   },
   stats: {
     flexDirection: 'row',
@@ -236,18 +256,20 @@ const styles = StyleSheet.create({
     paddingVertical: ms(10),
     paddingHorizontal: ms(12),
     borderRadius: radius.input,
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
   statValue: {
     fontFamily: fontFamily.display,
     fontSize: ms(20),
-    color: colors.ink,
+    lineHeight: ms(25.6),
+    color: c.ink,
     fontVariant: ['tabular-nums'],
   },
   statLabel: {
     fontFamily: fontFamily.bold,
     fontSize: ms(11.5),
-    color: colors.ink3,
+    lineHeight: ms(15),
+    color: c.ink3,
   },
   weeklyRow: {
     flexDirection: 'row',
@@ -258,7 +280,8 @@ const styles = StyleSheet.create({
   weeklyLabel: {
     fontFamily: fontFamily.bold,
     fontSize: ms(13),
-    color: colors.ink,
+    lineHeight: ms(16.9),
+    color: c.ink,
   },
   weeklyValue: {
     flexDirection: 'row',
@@ -267,7 +290,8 @@ const styles = StyleSheet.create({
   weeklyNumber: {
     fontFamily: fontFamily.displayBold,
     fontSize: ms(14),
-    color: colors.ink2,
+    lineHeight: ms(17.9),
+    color: c.ink2,
     fontVariant: ['tabular-nums'],
   },
   weeklyCount: {
@@ -286,16 +310,16 @@ const styles = StyleSheet.create({
     paddingVertical: ms(12),
     paddingHorizontal: ms(6),
     borderRadius: radius.button,
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
   badgeName: {
     fontFamily: fontFamily.bold,
     fontSize: ms(12),
     lineHeight: ms(15),
     textAlign: 'center',
-    color: colors.ink,
+    color: c.ink,
   },
   badgeNameLocked: {
-    color: colors.ink3,
+    color: c.ink3,
   },
-});
+}));

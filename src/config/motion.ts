@@ -1,5 +1,7 @@
 import {
   Easing,
+  FadeInDown,
+  LinearTransition,
   ReduceMotion,
   type WithSpringConfig,
   type WithTimingConfig,
@@ -45,3 +47,14 @@ export const springSoft: WithSpringConfig = {
 export const STAGGER = 50;
 
 export const PRESS_SCALE = 0.965;
+
+/**
+ * Screens and cards enter on a curve, not a spring — overshoot on a whole
+ * screen of content reads as wobble. Springs stay for object-level feedback:
+ * check marks, the mascot, the streak igniting.
+ */
+export const enterDown = (delay = 0) =>
+  FadeInDown.delay(delay).duration(duration.enter).easing(easeOut);
+
+/** Height and position changes when Home swaps state. */
+export const smoothLayout = LinearTransition.duration(duration.base).easing(easeOut);

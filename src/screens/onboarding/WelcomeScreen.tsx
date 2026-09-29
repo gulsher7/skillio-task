@@ -1,5 +1,6 @@
 import { router } from 'expo-router';
-import { StyleSheet, View } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
 import Animated, { FadeInDown, FadeIn } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle } from 'react-native-svg';
@@ -8,11 +9,13 @@ import Buddy from '@/components/brand/Buddy';
 import Logo from '@/components/brand/Logo';
 import ButtonComp from '@/components/common/ButtonComp';
 import Icon from '@/components/common/Icon';
+import LanguagePicker from '@/components/common/LanguagePicker';
 import TextComp from '@/components/common/TextComp';
 import { showToast } from '@/components/common/Toast';
 import FloatChip from '@/components/onboarding/FloatChip';
 import { STAGGER } from '@/config/motion';
-import { colors } from '@/styles/colors';
+import { DEFAULTS } from '@/data/mock';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms, screen } from '@/styles/scaling';
 import { spacing } from '@/styles/tokens';
@@ -21,17 +24,21 @@ const ORBIT = ms(300);
 const BUDDY = screen.isSmall ? 140 : 170;
 
 export default function WelcomeScreen() {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   const skipToHome = () => {
-    showToast('Signed in as Alex. Welcome back!', 'user');
+    showToast(t('welcome.signedIn', { name: DEFAULTS.userName }), 'user');
     router.replace('/home');
   };
 
   return (
     <View style={[styles.root, { paddingTop: insets.top + ms(10) }]}>
-      <Animated.View entering={FadeIn.duration(500)} style={styles.logo}>
+      <Animated.View entering={FadeIn.duration(500)} style={styles.topRow}>
         <Logo />
+        <LanguagePicker />
       </Animated.View>
 
       <View style={styles.hero}>
@@ -58,12 +65,14 @@ export default function WelcomeScreen() {
         <Buddy size={BUDDY} id="welcome" />
 
         <FloatChip style={styles.chipHello} rotate={-6}>
-          <TextComp style={styles.chipText}>👋 Hello!</TextComp>
+          <TextComp style={styles.chipText}>{t('welcome.chipHello')}</TextComp>
         </FloatChip>
 
         <FloatChip style={styles.chipXp} rotate={5} delay={600} background={colors.sun}>
           <Icon name="bolt" size={16} color={colors.sunInk} />
-          <TextComp style={[styles.chipText, { color: colors.sunInk }]}>+25 XP</TextComp>
+          <TextComp style={[styles.chipText, { color: colors.sunInk }]}>
+            {t('welcome.chipXp', { count: DEFAULTS.practice.xpReward })}
+          </TextComp>
         </FloatChip>
 
         <FloatChip style={styles.chipLevel} rotate={4} delay={1200}>
@@ -74,7 +83,9 @@ export default function WelcomeScreen() {
 
         <FloatChip style={styles.chipStreak} rotate={-4} delay={1800}>
           <Icon name="flame" size={17} color={colors.flame} />
-          <TextComp style={[styles.chipText, { color: colors.flameInk }]}>7 days</TextComp>
+          <TextComp style={[styles.chipText, { color: colors.flameInk }]}>
+            {t('welcome.chipStreak', { count: DEFAULTS.game.streakDays })}
+          </TextComp>
         </FloatChip>
       </View>
 
@@ -85,13 +96,14 @@ export default function WelcomeScreen() {
         style={styles.copy}
       >
         <TextComp variant="h1" center style={styles.headline}>
-          Learn English.{'\n'}
+          {t('welcome.headline')}
+          {'\n'}
           <TextComp variant="h1" style={styles.headlineAccent}>
-            Build confidence.
+            {t('welcome.headlineAccent')}
           </TextComp>
         </TextComp>
         <TextComp variant="body" center>
-          Your personalized English learning journey starts here.
+          {t('welcome.subtitle')}
         </TextComp>
       </Animated.View>
 
@@ -101,22 +113,25 @@ export default function WelcomeScreen() {
           .damping(18)}
         style={[styles.footer, { paddingBottom: insets.bottom + spacing.xxl }]}
       >
-        <ButtonComp onPress={() => router.push('/goal')}>Get started</ButtonComp>
+        <ButtonComp onPress={() => router.push('/goal')}>{t('welcome.getStarted')}</ButtonComp>
         <ButtonComp variant="ghost" size="sm" onPress={skipToHome}>
-          I already have an account
+          {t('welcome.haveAccount')}
         </ButtonComp>
       </Animated.View>
     </View>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
-  logo: {
+  topRow: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.gutter,
   },
   hero: {
     flex: 1,
@@ -134,21 +149,23 @@ const styles = StyleSheet.create({
   chipText: {
     fontFamily: fontFamily.black,
     fontSize: ms(14),
-    color: colors.ink,
+    lineHeight: ms(18.2),
+    color: c.ink,
   },
   cefr: {
     fontFamily: fontFamily.display,
     fontSize: ms(12),
+    lineHeight: ms(15.4),
     paddingHorizontal: ms(7),
     paddingVertical: ms(3),
     borderRadius: ms(8),
     overflow: 'hidden',
-    backgroundColor: colors.teal50,
-    color: colors.teal700,
+    backgroundColor: c.teal50,
+    color: c.teal700,
   },
   cefrNext: {
-    backgroundColor: colors.teal,
-    color: colors.surface,
+    backgroundColor: c.teal,
+    color: c.onAccent,
   },
   copy: {
     paddingHorizontal: spacing.xxl,
@@ -161,11 +178,11 @@ const styles = StyleSheet.create({
   headlineAccent: {
     fontSize: ms(34),
     lineHeight: ms(38),
-    color: colors.teal,
+    color: c.teal,
   },
   footer: {
     paddingHorizontal: spacing.xxl,
     paddingTop: spacing.xxl,
     gap: spacing.xs,
   },
-});
+}));

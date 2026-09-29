@@ -1,9 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, { FadeOut, SlideInUp } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { colors } from '@/styles/colors';
+import { duration, easeOut } from '@/config/motion';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, shadows } from '@/styles/tokens';
@@ -25,6 +26,8 @@ export function showToast(message: string, icon: IconName = 'check') {
 const VISIBLE_MS = 2600;
 
 export function ToastHost() {
+  const styles = useStyles();
+  const colors = useColors();
   const insets = useSafeAreaInsets();
   const [toast, setToast] = useState<ToastPayload | null>(null);
   const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
@@ -47,13 +50,13 @@ export function ToastHost() {
     <View pointerEvents="none" style={[styles.host, { top: insets.top + ms(8) }]}>
       <Animated.View
         key={toast.id}
-        entering={SlideInUp.springify().damping(16).stiffness(180)}
+        entering={SlideInUp.duration(duration.base).easing(easeOut)}
         exiting={FadeOut.duration(180)}
         accessibilityRole="alert"
         style={styles.toast}
       >
         <View style={styles.iconWrap}>
-          <Icon name={toast.icon} size={16} color={colors.surface} />
+          <Icon name={toast.icon} size={16} color={colors.onInkSurface} />
         </View>
         <TextComp style={styles.text} numberOfLines={2}>
           {toast.message}
@@ -63,7 +66,7 @@ export function ToastHost() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   host: {
     position: 'absolute',
     left: 0,
@@ -76,7 +79,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: ms(10),
     maxWidth: '92%',
-    backgroundColor: colors.ink,
+    backgroundColor: c.inkSurface,
     paddingVertical: ms(11),
     paddingLeft: ms(12),
     paddingRight: ms(16),
@@ -96,6 +99,6 @@ const styles = StyleSheet.create({
     fontFamily: fontFamily.bold,
     fontSize: ms(14),
     lineHeight: ms(19),
-    color: colors.surface,
+    color: c.onInkSurface,
   },
-});
+}));

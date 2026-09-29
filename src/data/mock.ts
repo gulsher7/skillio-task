@@ -1,35 +1,12 @@
 import type { Badge, PracticeResult, SkillKey } from '@/models/home';
-import { colors } from '@/styles/colors';
 import { atDayOffset, toLocalIso } from '@/utils/date';
 
 import type { TeacherId } from './avatars';
 
 export const BADGES: Badge[] = [
-  {
-    id: 'streak',
-    name: 'Week Warrior',
-    description: 'Practised 7 days in a row. Keep the flame going.',
-    earnedLabel: 'Earned today',
-    glyph: 'flame',
-    colors: ['#FFA25E', '#FF6A3D'],
-  },
-  {
-    id: 'words',
-    name: 'Word Collector',
-    description: 'Learned your first 300 words.',
-    earnedLabel: 'Earned Sep 21',
-    glyph: 'book',
-    colors: ['#FFD36A', '#F29A1F'],
-  },
-  {
-    id: 'voice',
-    name: 'Clear Voice',
-    description: 'Score 80%+ in pronunciation. You are 9% away.',
-    earnedLabel: 'Locked',
-    locked: true,
-    glyph: 'mic',
-    colors: ['#9C90FF', '#6A5AE8'],
-  },
+  { id: 'streak', glyph: 'flame', colors: ['#FFA25E', '#FF6A3D'] },
+  { id: 'words', glyph: 'book', colors: ['#FFD36A', '#F29A1F'] },
+  { id: 'voice', glyph: 'mic', colors: ['#9C90FF', '#6A5AE8'], locked: true },
 ];
 
 export type ClassSlot = {
@@ -38,6 +15,7 @@ export type ClassSlot = {
   hour: number;
   minute: number;
   teacher: TeacherId;
+  /** Teacher names and subjects are backend records, so they stay as sent. */
   subject: string;
 };
 
@@ -70,44 +48,12 @@ export const SAMPLE_RESULT: PracticeResult = {
   missed: ['pho-TOG-ra-pher'],
 };
 
-export const SKILL_META: Record<
-  SkillKey,
-  {
-    label: string;
-    color: string;
-    tint: string;
-    icon: 'puzzle' | 'book' | 'wave' | 'mic';
-    tip: string;
-  }
-> = {
-  grammar: {
-    label: 'Grammar',
-    color: colors.skill.grammar,
-    tint: colors.skillTint.grammar,
-    icon: 'puzzle',
-    tip: 'Strongest skill. Conditionals are next up.',
-  },
-  vocabulary: {
-    label: 'Vocabulary',
-    color: colors.skill.vocabulary,
-    tint: colors.skillTint.vocabulary,
-    icon: 'book',
-    tip: '312 words learned. 18 are due for review.',
-  },
-  pronunciation: {
-    label: 'Pronunciation',
-    color: colors.skill.pronunciation,
-    tint: colors.skillTint.pronunciation,
-    icon: 'wave',
-    tip: 'Word stress improved 9% this month.',
-  },
-  speaking: {
-    label: 'Speaking',
-    color: colors.skill.speaking,
-    tint: colors.skillTint.speaking,
-    icon: 'mic',
-    tip: 'Your focus area. 2 speaking drills this week.',
-  },
+/** Colours live in the palette under `skill` / `skillTint`, keyed the same. */
+export const SKILL_ICON: Record<SkillKey, 'puzzle' | 'book' | 'wave' | 'mic'> = {
+  grammar: 'puzzle',
+  vocabulary: 'book',
+  pronunciation: 'wave',
+  speaking: 'mic',
 };
 
 export const SKILL_ORDER: SkillKey[] = ['grammar', 'vocabulary', 'pronunciation', 'speaking'];
@@ -119,7 +65,7 @@ export const DEFAULTS = {
   totalLessons: 40,
   renewsOn: 'Oct 28',
   overallProgressPercent: 68,
-  weeksToNextLevel: '~6 weeks to go',
+  weeksToNextLevel: 6,
   skills: {
     grammar: 78,
     vocabulary: 64,
@@ -133,23 +79,11 @@ export const DEFAULTS = {
 } as const;
 
 export const PLAN_OPTIONS = [
-  {
-    id: 'plus',
-    name: 'Plus · 20 lessons / month',
-    price: '$59/mo',
-    lessons: 20,
-    note: 'Good to start',
-  },
-  {
-    id: 'premium',
-    name: 'Premium · 40 lessons / month',
-    price: '$99/mo',
-    lessons: 40,
-    note: 'Best value',
-  },
+  { id: 'plus', nameKey: 'sheets.planPlus', price: '$59/mo', lessons: 20 },
+  { id: 'premium', nameKey: 'sheets.planPremium', price: '$99/mo', lessons: 40 },
 ];
 
 export const TOPUP_OPTIONS = [
-  { id: 'ten', name: '10 lessons', price: '$39', lessons: 10, note: 'Good to start' },
-  { id: 'twenty', name: '20 lessons', price: '$69', lessons: 20, note: 'Best value' },
+  { id: 'ten', nameKey: 'sheets.topUpTen', price: '$39', lessons: 10 },
+  { id: 'twenty', nameKey: 'sheets.topUpTwenty', price: '$69', lessons: 20 },
 ];

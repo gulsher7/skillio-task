@@ -1,115 +1,179 @@
 import { router } from 'expo-router';
 import { useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
+  Easing,
   interpolate,
   interpolateColor,
   useAnimatedStyle,
+  useReducedMotion,
   useSharedValue,
+  withDelay,
+  withRepeat,
+  withSequence,
   withSpring,
   withTiming,
 } from 'react-native-reanimated';
 
 import Icon from '@/components/common/Icon';
-import IconTile from '@/components/common/IconTile';
 import PressableScale from '@/components/common/PressableScale';
-import TextComp from '@/components/common/TextComp';
 import OnboardingShell from '@/components/onboarding/OnboardingShell';
 import { duration, springPop, timing } from '@/config/motion';
 import { FOCUS_OPTIONS } from '@/data/onboardingOptions';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import type { FocusOption } from '@/models/onboarding';
 import { toggleFocus } from '@/redux/reducers/onboardingSlice';
-import { colors } from '@/styles/colors';
 import { fontFamily } from '@/styles/fontFamily';
-import { ms } from '@/styles/scaling';
-import { radius, spacing } from '@/styles/tokens';
+import { ms, screen } from '@/styles/scaling';
+import { makeStyles, useColors } from '@/styles/theme';
+import { spacing } from '@/styles/tokens';
 
-function FocusChip({
+const GAP = ms(14);
+/** Sized so all five bubbles land in one viewport without scrolling. */
+const BUBBLE = Math.min(ms(128), (screen.width - spacing.gutter * 2 - GAP) / 2);
+
+/** Nudges alternating bubbles down so the five read as a cloud, not a grid. */
+const OFFSETS = [0, ms(20), 0, ms(20), 0];
+
+const FLOAT = ms(6);
+
+function FocusBubble({
   option,
+  label,
   selected,
+  index,
   onPress,
 }: {
   option: FocusOption;
+  label: string;
   selected: boolean;
+  index: number;
   onPress: () => void;
 }) {
+  const styles = useStyles();
+  const colors = useColors();
+  const hue = colors.hue[option.hue];
+  const tint = colors.hueTint[option.hue];
+  const reduced = useReducedMotion();
   const on = useSharedValue(selected ? 1 : 0);
+  const drift = useSharedValue(0.5);
+  const ripple = useSharedValue(0);
 
   useEffect(() => {
     on.set(selected ? withSpring(1, springPop) : withTiming(0, timing(duration.fast)));
-  }, [selected, on]);
+    if (selected) {
+      ripple.set(0);
+      ripple.set(withTiming(1, { duration: 620, easing: Easing.out(Easing.quad) }));
+    }
+  }, [selected, on, ripple]);
 
-  const chip = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(on.get(), [0, 1], [colors.line, colors.teal]),
-    backgroundColor: interpolateColor(on.get(), [0, 1], [colors.surface, colors.selectedCard]),
-  }));
+  useEffect(() => {
+    if (reduced) return;
+    // Each bubble breathes on its own clock, so the group never marches in step.
+    const period = 1900 + index * 230;
+    drift.set(
+      withDelay(
+        index * 180,
+        withRepeat(
+          withSequence(
+            withTiming(0, { duration: period, easing: Easing.inOut(Easing.sin) }),
+            withTiming(1, { duration: period, easing: Easing.inOut(Easing.sin) }),
+          ),
+          -1,
+          true,
+        ),
+      ),
+    );
+  }, [drift, index, reduced]);
 
-  const tile = useAnimatedStyle(() => ({
+  const bubble = useAnimatedStyle(() => ({
     transform: [
-      { scale: interpolate(on.get(), [0, 1], [1, 1.1]) },
-      { rotate: `${interpolate(on.get(), [0, 1], [0, -8])}deg` },
+      { translateY: interpolate(drift.get(), [0, 1], [FLOAT, -FLOAT]) },
+      { translateX: interpolate(drift.get(), [0, 1], [-FLOAT / 3, FLOAT / 3]) },
+      { scale: interpolate(on.get(), [0, 1], [1, 1.07]) },
     ],
+    backgroundColor: interpolateColor(on.get(), [0, 1], [tint, hue]),
+    borderColor: interpolateColor(on.get(), [0, 1], [colors.surface, hue]),
+    shadowOpacity: interpolate(on.get(), [0, 1], [0.1, 0.34]),
   }));
 
-  const tick = useAnimatedStyle(() => ({
-    borderColor: interpolateColor(on.get(), [0, 1], ['#CFDDE0', colors.teal]),
-    backgroundColor: interpolateColor(on.get(), [0, 1], ['transparent', colors.teal]),
+  const ring = useAnimatedStyle(() => ({
+    opacity: interpolate(ripple.get(), [0, 0.3, 1], [0, 0.5, 0]),
+    transform: [{ scale: interpolate(ripple.get(), [0, 1], [0.96, 1.34]) }],
   }));
 
-  const tickIcon = useAnimatedStyle(() => ({ opacity: on.get() }));
+  const restIcon = useAnimatedStyle(() => ({ opacity: 1 - on.get() }));
+  const activeIcon = useAnimatedStyle(() => ({ opacity: on.get() }));
+
+  const labelStyle = useAnimatedStyle(() => ({
+    color: interpolateColor(on.get(), [0, 1], [colors.ink, colors.onAccent]),
+  }));
+
+  const badge = useAnimatedStyle(() => ({
+    opacity: on.get(),
+    transform: [{ scale: interpolate(on.get(), [0, 1], [0.4, 1]) }],
+  }));
 
   return (
-    <PressableScale
-      onPress={onPress}
-      haptic="select"
-      scaleTo={0.95}
-      accessibilityRole="checkbox"
-      accessibilityState={{ checked: selected }}
-      accessibilityLabel={option.label}
-    >
-      <Animated.View style={[styles.chip, chip]}>
-        <Animated.View style={tile}>
-          <IconTile
-            name={option.icon}
-            color={option.color}
-            background={option.tint}
-            size={34}
-            iconSize={19}
-            radius={11}
-          />
-        </Animated.View>
+    <View style={{ marginTop: OFFSETS[index] }}>
+      <Animated.View style={[styles.ripple, { borderColor: hue }, ring]} pointerEvents="none" />
 
-        <TextComp style={styles.chipLabel}>{option.label}</TextComp>
+      <PressableScale
+        onPress={onPress}
+        haptic="select"
+        scaleTo={0.93}
+        accessibilityRole="checkbox"
+        accessibilityState={{ checked: selected }}
+        accessibilityLabel={label}
+      >
+        <Animated.View style={[styles.bubble, { shadowColor: hue }, bubble]}>
+          <View style={styles.gloss} pointerEvents="none" />
 
-        <Animated.View style={[styles.tick, tick]}>
-          <Animated.View style={tickIcon}>
-            <Icon name="check" size={13} color={colors.surface} strokeWidth={3.6} />
+          <View style={styles.iconStack}>
+            <Animated.View style={restIcon}>
+              <Icon name={option.icon} size={26} color={hue} strokeWidth={2.1} />
+            </Animated.View>
+            <Animated.View style={[styles.iconOverlay, activeIcon]}>
+              <Icon name={option.icon} size={26} color={colors.onAccent} strokeWidth={2.1} />
+            </Animated.View>
+          </View>
+
+          <Animated.Text style={[styles.label, labelStyle]} numberOfLines={1}>
+            {label}
+          </Animated.Text>
+
+          <Animated.View style={[styles.badge, badge]}>
+            <Icon name="check" size={12} color={hue} strokeWidth={3.6} />
           </Animated.View>
         </Animated.View>
-      </Animated.View>
-    </PressableScale>
+      </PressableScale>
+    </View>
   );
 }
 
 export default function FocusScreen() {
+  const styles = useStyles();
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const focus = useAppSelector((s) => s.onboarding.focus);
 
   return (
     <OnboardingShell
       step={4}
-      title="What would you like to focus on?"
-      subtitle="Choose as many as you like."
+      title={t('focus.title')}
+      subtitle={t('focus.subtitle')}
       onContinue={() => router.push('/name')}
       ctaDisabled={focus.length === 0}
-      ctaLabel={focus.length ? `Continue · ${focus.length} selected` : 'Continue'}
+      ctaLabel={focus.length ? t('common.continueSelected', { count: focus.length }) : undefined}
     >
-      <View style={styles.wrap}>
-        {FOCUS_OPTIONS.map((option) => (
-          <FocusChip
+      <View style={styles.cloud}>
+        {FOCUS_OPTIONS.map((option, index) => (
+          <FocusBubble
             key={option.id}
             option={option}
+            index={index}
+            label={t(`focus.${option.id}`)}
             selected={focus.includes(option.id)}
             onPress={() => dispatch(toggleFocus(option.id))}
           />
@@ -119,33 +183,70 @@ export default function FocusScreen() {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: {
+const useStyles = makeStyles((c) => ({
+  cloud: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: spacing.md,
+    justifyContent: 'center',
+    columnGap: GAP,
+    rowGap: GAP,
+    paddingTop: spacing.sm,
   },
-  chip: {
-    flexDirection: 'row',
+  bubble: {
+    width: BUBBLE,
+    height: BUBBLE,
+    borderRadius: BUBBLE / 2,
     alignItems: 'center',
-    gap: ms(10),
-    paddingVertical: ms(12),
-    paddingLeft: ms(12),
-    paddingRight: ms(16),
-    borderRadius: radius.button,
+    justifyContent: 'center',
+    gap: ms(6),
+    borderWidth: 2,
+    overflow: 'hidden',
+    shadowOffset: { width: 0, height: ms(10) },
+    shadowRadius: ms(16),
+    elevation: 4,
+  },
+  /** The specular highlight that makes a flat circle read as a bubble. */
+  gloss: {
+    position: 'absolute',
+    top: '13%',
+    left: '16%',
+    width: '38%',
+    height: '20%',
+    borderRadius: BUBBLE / 2,
+    backgroundColor: 'rgba(255,255,255,0.55)',
+    transform: [{ rotate: '-24deg' }],
+  },
+  ripple: {
+    ...StyleSheet.absoluteFill,
+    borderRadius: BUBBLE / 2,
     borderWidth: 2,
   },
-  chipLabel: {
-    fontFamily: fontFamily.bold,
-    fontSize: ms(15.5),
-    color: colors.ink,
-  },
-  tick: {
-    width: ms(22),
-    height: ms(22),
-    borderRadius: ms(11),
-    borderWidth: 2,
+  iconStack: {
+    width: ms(28),
+    height: ms(28),
     alignItems: 'center',
     justifyContent: 'center',
   },
-});
+  iconOverlay: {
+    ...StyleSheet.absoluteFill,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  label: {
+    fontFamily: fontFamily.black,
+    fontSize: ms(12.5),
+    lineHeight: ms(16.3),
+    paddingHorizontal: ms(5),
+  },
+  badge: {
+    position: 'absolute',
+    top: '14%',
+    right: '14%',
+    width: ms(21),
+    height: ms(21),
+    borderRadius: ms(10.5),
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: c.surface,
+  },
+}));

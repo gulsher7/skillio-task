@@ -1,12 +1,13 @@
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Svg, { Circle, Defs, LinearGradient, Path, Stop } from 'react-native-svg';
 
 import TextComp from '@/components/common/TextComp';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 
 export function LogoMark({ size = 34 }: { size?: number }) {
+  const colors = useColors();
   const box = ms(size);
   return (
     <Svg width={box} height={box} viewBox="0 0 40 40">
@@ -33,6 +34,7 @@ export function LogoMark({ size = 34 }: { size?: number }) {
 }
 
 export default function Logo({ size = 34 }: { size?: number }) {
+  const styles = useStyles();
   return (
     <View style={styles.row} accessibilityRole="header" accessibilityLabel="Skillio">
       <LogoMark size={size} />
@@ -41,7 +43,7 @@ export default function Logo({ size = 34 }: { size?: number }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   row: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -50,7 +52,8 @@ const styles = StyleSheet.create({
   word: {
     fontFamily: fontFamily.display,
     fontSize: ms(24),
+    lineHeight: ms(30.7),
     letterSpacing: -0.9,
-    color: colors.ink,
+    color: c.ink,
   },
-});
+}));

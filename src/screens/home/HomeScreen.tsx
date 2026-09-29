@@ -1,8 +1,8 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams, usePathname } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { View } from 'react-native';
 import Animated, {
-  FadeInDown,
   useAnimatedScrollHandler,
   useSharedValue,
   withSequence,
@@ -12,8 +12,10 @@ import Animated, {
 } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { LanguageSheet } from '@/components/common/LanguagePicker';
 import Sheet from '@/components/common/Sheet';
 import { showToast } from '@/components/common/Toast';
+import { PRESETS } from '@/components/demo/DemoPanel';
 import Confetti, { type ConfettiHandle } from '@/components/fx/Confetti';
 import XpFly from '@/components/fx/XpFly';
 import ClassCard from '@/components/home/ClassCard';
@@ -29,7 +31,7 @@ import BookClassSheet from '@/components/sheets/BookClassSheet';
 import JoinClassSheet from '@/components/sheets/JoinClassSheet';
 import PlansSheet from '@/components/sheets/PlansSheet';
 import ResultsSheet from '@/components/sheets/ResultsSheet';
-import { duration, springPop, STAGGER, timing } from '@/config/motion';
+import { duration, enterDown, springPop, STAGGER, timing } from '@/config/motion';
 import { TEACHERS } from '@/data/avatars';
 import { SAMPLE_RESULT } from '@/data/mock';
 import { useHomeData } from '@/hooks/useHomeData';
@@ -38,15 +40,17 @@ import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import type { Badge } from '@/models/home';
 import {
   activatePlan,
+  applyPreset,
   bookClass,
   clearCelebration,
   topUpLessons,
   unlockSkillSnapshot,
 } from '@/redux/reducers/homeSlice';
-import { colors } from '@/styles/colors';
+import { makeStyles } from '@/styles/theme';
+
 import { layout, spacing } from '@/styles/tokens';
 import { atDayOffset, toLocalIso } from '@/utils/date';
-import { onHomeFocus, type HomeSection } from '@/utils/homeFocus';
+import { focusHomeSection, onHomeFocus, type HomeSection } from '@/utils/homeFocus';
 
 type SheetKind =
   | { kind: 'results' }
@@ -54,16 +58,21 @@ type SheetKind =
   | { kind: 'join' }
   | { kind: 'badge'; badge: Badge }
   | { kind: 'plans' }
-  | { kind: 'topup' };
+  | { kind: 'topup' }
+  | { kind: 'language' };
 
 /** How long after landing back from /celebrate the XP chip takes off. */
 const CELEBRATION_DELAY = 450;
 
 export default function HomeScreen() {
+  const styles = useStyles();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const dispatch = useAppDispatch();
   const data = useHomeData();
   const justCelebrated = useAppSelector((s) => s.home.justCelebrated);
+  const { state: deepLinkState } = useLocalSearchParams<{ state?: string }>();
+  const isFocused = usePathname() === '/home';
 
   const scrollRef = useRef<Animated.ScrollView>(null);
   const sectionY = useRef<Partial<Record<HomeSection, number>>>({});
@@ -87,6 +96,16 @@ export default function HomeScreen() {
     scrollRef.current?.scrollTo({ y: Math.max(0, y), animated: true });
   }, []);
 
+  // Deep link: skillio://home?state=noclass opens Home in that exact state, so a
+  // screenshot script can walk every case without touching the UI.
+  useEffect(() => {
+    if (!deepLinkState) return;
+    const preset = PRESETS.find((p) => p.id === deepLinkState);
+    if (!preset) return;
+    dispatch(applyPreset(preset.patch));
+    focusHomeSection(preset.section);
+  }, [deepLinkState, dispatch]);
+
   useEffect(
     () =>
       onHomeFocus((section, token) => {
@@ -97,13 +116,17 @@ export default function HomeScreen() {
   );
 
   // Reward feedback fires whenever today's practice flips to complete, whether
-  // that came from the practice flow or from the demo panel.
+  // that came from the practice flow or from the demo panel. It waits for Home
+  // to be on screen again — the celebration screen is still in front of it when
+  // the practice actually finishes.
   const done = data.dailyPractice.completedToday;
   useEffect(() => {
-    if (!done || previousDone.current) {
-      previousDone.current = done;
+    if (!isFocused) return;
+    if (!done) {
+      previousDone.current = false;
       return;
     }
+    if (previousDone.current) return;
     previousDone.current = true;
 
     const fromCelebration = justCelebrated;
@@ -122,7 +145,7 @@ export default function HomeScreen() {
     );
 
     return () => clearTimeout(timer);
-  }, [done, justCelebrated, dispatch, streakPulse]);
+  }, [isFocused, done, justCelebrated, dispatch, streakPulse]);
 
   const measure = useCallback((section: HomeSection, y: number) => {
     sectionY.current[section] = y;
@@ -185,7 +208,7 @@ export default function HomeScreen() {
               highlightKey={highlightFor('skills')}
               onUnlock={() => {
                 dispatch(unlockSkillSnapshot());
-                showToast('Skill snapshot unlocked', 'sparkle');
+                showToast(t('skills.unlocked'), 'sparkle');
               }}
             />
           )}
@@ -226,14 +249,16 @@ export default function HomeScreen() {
         streakPulse={streakPulse}
         onLayout={(event) => setHeaderHeight(event.nativeEvent.layout.height)}
         onStreakPress={() => scrollToSection('rewards')}
-        onBellPress={() => showToast('Sarah shared notes from your last class', 'bell')}
+        onBellPress={() => showToast(t('home.bellToast'), 'bell')}
+        onLanguagePress={() => setSheet({ kind: 'language' })}
       />
 
+      {/* The XP chip flies up to the streak, which sits under the greeting. */}
       {flyingXp ? (
         <XpFly
           amount={data.dailyPractice.xpReward}
           onDone={() => setFlyingXp(false)}
-          style={{ top: insets.top + spacing.xxl, right: spacing.xxl * 3 }}
+          style={{ top: insets.top + spacing.xxl * 2, left: spacing.xxl * 3.4 }}
         />
       ) : null}
 
@@ -241,8 +266,14 @@ export default function HomeScreen() {
 
       <Confetti ref={confetti} />
 
+      {sheet?.kind === 'language' ? (
+        <Sheet onClose={closeSheet} label={t('common.language')}>
+          {(close) => <LanguageSheet onDone={close} />}
+        </Sheet>
+      ) : null}
+
       {sheet?.kind === 'results' ? (
-        <Sheet onClose={closeSheet} label="Practice results" scrollable>
+        <Sheet onClose={closeSheet} label={t('sheets.resultsEyebrow')} scrollable>
           <ResultsSheet
             result={data.dailyPractice.result ?? SAMPLE_RESULT}
             xpReward={data.dailyPractice.xpReward}
@@ -251,7 +282,7 @@ export default function HomeScreen() {
       ) : null}
 
       {sheet?.kind === 'book' ? (
-        <Sheet onClose={closeSheet} label="Book a class">
+        <Sheet onClose={closeSheet} label={t('sheets.bookTitle')}>
           {(close) => (
             <BookClassSheet
               subscription={data.subscription}
@@ -268,7 +299,10 @@ export default function HomeScreen() {
                     subject: slot.subject,
                   }),
                 );
-                showToast(`Booked with ${teacher.name.split(' ')[0]} · 1 lesson used`, 'calendar');
+                showToast(
+                  t('sheets.bookedToast', { name: teacher.name.split(' ')[0] }),
+                  'calendar',
+                );
               }}
             />
           )}
@@ -276,13 +310,13 @@ export default function HomeScreen() {
       ) : null}
 
       {sheet?.kind === 'join' && data.scheduledClass ? (
-        <Sheet onClose={closeSheet} label="Join class">
+        <Sheet onClose={closeSheet} label={t('class.join')}>
           {(close) => (
             <JoinClassSheet
               scheduledClass={data.scheduledClass!}
               onEnter={() => {
                 close();
-                showToast('The video room opens here in the full app', 'video');
+                showToast(t('sheets.videoToast'), 'video');
               }}
             />
           )}
@@ -290,13 +324,13 @@ export default function HomeScreen() {
       ) : null}
 
       {sheet?.kind === 'badge' ? (
-        <Sheet onClose={closeSheet} label={sheet.badge.name}>
+        <Sheet onClose={closeSheet} label={t('rewards.badges')}>
           <BadgeSheet badge={sheet.badge} />
         </Sheet>
       ) : null}
 
       {sheet?.kind === 'plans' || sheet?.kind === 'topup' ? (
-        <Sheet onClose={closeSheet} label="Plans" scrollable>
+        <Sheet onClose={closeSheet} label={t('sheets.choosePlan')} scrollable>
           {(close) => (
             <PlansSheet
               mode={sheet.kind === 'topup' ? 'topup' : 'plans'}
@@ -304,7 +338,12 @@ export default function HomeScreen() {
                 const topUp = sheet.kind === 'topup';
                 close();
                 dispatch(topUp ? topUpLessons(lessons) : activatePlan(lessons));
-                showToast(topUp ? `${lessons} lessons added` : 'Welcome to Premium', 'crown');
+                showToast(
+                  topUp
+                    ? t('sheets.lessonsAdded', { count: lessons })
+                    : t('sheets.welcomeToPremium'),
+                  'crown',
+                );
               }}
             />
           )}
@@ -331,9 +370,7 @@ function Section({
 
   return (
     <Animated.View
-      entering={FadeInDown.delay(index * STAGGER)
-        .springify()
-        .damping(18)}
+      entering={enterDown(index * STAGGER)}
       onLayout={(event) => {
         onMeasure(section, event.nativeEvent.layout.y);
         onLayout(event);
@@ -344,14 +381,14 @@ function Section({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
   content: {
     paddingHorizontal: spacing.homeGutter,
     paddingBottom: layout.scrollBottomPad,
     gap: spacing.section,
   },
-});
+}));

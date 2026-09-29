@@ -1,14 +1,15 @@
 import { router } from 'expo-router';
-import { KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View } from 'react-native';
-import Animated, { FadeInDown } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
+import { KeyboardAvoidingView, Platform, ScrollView, View } from 'react-native';
+import Animated from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import ButtonComp from '@/components/common/ButtonComp';
 import IconButton from '@/components/common/IconButton';
 import ProgressBar from '@/components/common/ProgressBar';
 import TextComp from '@/components/common/TextComp';
-import { duration, STAGGER } from '@/config/motion';
-import { colors } from '@/styles/colors';
+import { duration, enterDown, STAGGER } from '@/config/motion';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { spacing } from '@/styles/tokens';
@@ -38,19 +39,22 @@ export default function OnboardingShell({
   subtitle,
   children,
   onContinue,
-  ctaLabel = 'Continue',
+  ctaLabel,
   ctaDisabled,
   footerExtra,
   complete,
   avoidKeyboard,
 }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const Root = avoidKeyboard ? KeyboardAvoidingView : View;
 
   return (
     <Root style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <View style={[styles.header, { paddingTop: insets.top + ms(6) }]}>
-        <IconButton name="chevronLeft" label="Go back" onPress={() => router.back()} />
+        <IconButton name="chevronLeft" label={t('common.back')} onPress={() => router.back()} />
         <ProgressBar
           progress={complete ? 1 : step / ONBOARDING_STEPS}
           height={ms(10)}
@@ -58,7 +62,10 @@ export default function OnboardingShell({
           track="#DFEBED"
           animationDuration={duration.slow}
           style={styles.bar}
-          accessibilityLabel={`Step ${step} of ${ONBOARDING_STEPS}`}
+          accessibilityLabel={t('practice.progressA11y', {
+            current: step,
+            total: ONBOARDING_STEPS,
+          })}
         />
         <TextComp style={styles.count}>{complete ? '✓' : `${step}/${ONBOARDING_STEPS}`}</TextComp>
       </View>
@@ -69,37 +76,28 @@ export default function OnboardingShell({
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
       >
-        <Animated.View
-          entering={FadeInDown.delay(STAGGER).springify().damping(18)}
-          style={styles.intro}
-        >
+        <Animated.View entering={enterDown(STAGGER)} style={styles.intro}>
           <TextComp variant="h1">{title}</TextComp>
           {subtitle ? <TextComp variant="body">{subtitle}</TextComp> : null}
         </Animated.View>
 
-        <Animated.View
-          entering={FadeInDown.delay(STAGGER * 2)
-            .springify()
-            .damping(18)}
-        >
-          {children}
-        </Animated.View>
+        <Animated.View entering={enterDown(STAGGER * 2)}>{children}</Animated.View>
       </ScrollView>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.lg }]}>
         {footerExtra}
         <ButtonComp onPress={onContinue} disabled={ctaDisabled}>
-          {ctaLabel}
+          {ctaLabel ?? t('common.continue')}
         </ButtonComp>
       </View>
     </Root>
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: {
     flex: 1,
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
   header: {
     flexDirection: 'row',
@@ -116,7 +114,8 @@ const styles = StyleSheet.create({
     textAlign: 'right',
     fontFamily: fontFamily.black,
     fontSize: ms(13),
-    color: colors.ink3,
+    lineHeight: ms(16.9),
+    color: c.ink3,
     fontVariant: ['tabular-nums'],
   },
   scroll: {
@@ -135,6 +134,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.gutter,
     paddingTop: spacing.base,
     gap: spacing.sm,
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
-});
+}));

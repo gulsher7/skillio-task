@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useRef } from 'react';
-import { StyleSheet, TextInput, View } from 'react-native';
+import { TextInput, View } from 'react-native';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
 import Buddy from '@/components/brand/Buddy';
@@ -8,7 +9,7 @@ import TextComp from '@/components/common/TextComp';
 import OnboardingShell from '@/components/onboarding/OnboardingShell';
 import { useAppDispatch, useAppSelector } from '@/hooks/useRedux';
 import { setName } from '@/redux/reducers/onboardingSlice';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
@@ -16,14 +17,17 @@ import { radius, spacing } from '@/styles/tokens';
 const MAX_LENGTH = 20;
 
 export default function NameScreen() {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const dispatch = useAppDispatch();
   const name = useAppSelector((s) => s.onboarding.name);
   const trimmed = name.trim();
   const input = useRef<TextInput>(null);
 
   useEffect(() => {
-    const t = setTimeout(() => input.current?.focus(), 450);
-    return () => clearTimeout(t);
+    const timer = setTimeout(() => input.current?.focus(), 450);
+    return () => clearTimeout(timer);
   }, []);
 
   const submit = () => {
@@ -33,14 +37,14 @@ export default function NameScreen() {
   return (
     <OnboardingShell
       step={5}
-      title="What should we call you?"
-      subtitle="We'll use it to personalize your plan."
+      title={t('name.title')}
+      subtitle={t('name.subtitle')}
       onContinue={submit}
       ctaDisabled={!trimmed}
       avoidKeyboard
     >
       <View style={styles.field}>
-        <TextComp variant="eyebrow">First name</TextComp>
+        <TextComp variant="eyebrow">{t('name.label')}</TextComp>
         <View>
           <TextInput
             ref={input}
@@ -48,13 +52,13 @@ export default function NameScreen() {
             onChangeText={(next) => dispatch(setName(next.replace(/^\s+/, '')))}
             onSubmitEditing={submit}
             maxLength={MAX_LENGTH}
-            placeholder="Your first name"
-            placeholderTextColor="#B4C7CB"
+            placeholder={t('name.placeholder')}
+            placeholderTextColor={colors.placeholder}
             autoComplete="given-name"
             autoCorrect={false}
             returnKeyType="done"
             selectionColor={colors.teal}
-            accessibilityLabel="First name"
+            accessibilityLabel={t('name.label')}
             style={styles.input}
           />
           <TextComp style={styles.counter}>
@@ -71,7 +75,7 @@ export default function NameScreen() {
             style={styles.bubble}
           >
             <Animated.View entering={FadeIn.delay(60)}>
-              <TextComp style={styles.bubbleText}>Nice to meet you, {trimmed}! 🎉</TextComp>
+              <TextComp style={styles.bubbleText}>{t('name.greeting', { name: trimmed })}</TextComp>
             </Animated.View>
           </Animated.View>
         ) : null}
@@ -80,7 +84,7 @@ export default function NameScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   field: {
     gap: spacing.sm,
   },
@@ -88,13 +92,14 @@ const styles = StyleSheet.create({
     height: ms(68),
     borderRadius: ms(22),
     borderWidth: 2,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
+    borderColor: c.line,
+    backgroundColor: c.surface,
     paddingHorizontal: spacing.xl,
     paddingRight: ms(64),
     fontFamily: fontFamily.displayBold,
     fontSize: ms(26),
-    color: colors.ink,
+    lineHeight: ms(33.3),
+    color: c.ink,
   },
   counter: {
     position: 'absolute',
@@ -103,7 +108,7 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -ms(8) }],
     fontFamily: fontFamily.bold,
     fontSize: ms(12),
-    color: colors.ink3,
+    color: c.ink3,
   },
   greeting: {
     flexDirection: 'row',
@@ -114,9 +119,9 @@ const styles = StyleSheet.create({
   },
   bubble: {
     flexShrink: 1,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     borderWidth: 1,
-    borderColor: colors.line,
+    borderColor: c.line,
     borderRadius: radius.option,
     borderBottomLeftRadius: ms(6),
     paddingVertical: ms(12),
@@ -126,6 +131,7 @@ const styles = StyleSheet.create({
   bubbleText: {
     fontFamily: fontFamily.bold,
     fontSize: ms(16),
-    color: colors.ink,
+    lineHeight: ms(20.8),
+    color: c.ink,
   },
-});
+}));

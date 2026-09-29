@@ -1,6 +1,7 @@
 import { LinearGradient } from 'expo-linear-gradient';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, LinearTransition, ZoomIn } from 'react-native-reanimated';
+import Animated, { FadeIn, FadeOut, ZoomIn } from 'react-native-reanimated';
 import Svg, { Circle, Path } from 'react-native-svg';
 
 import Buddy from '@/components/brand/Buddy';
@@ -8,7 +9,9 @@ import ButtonComp from '@/components/common/ButtonComp';
 import Icon from '@/components/common/Icon';
 import TextComp from '@/components/common/TextComp';
 import type { HomeData } from '@/models/home';
-import { colors, gradients } from '@/styles/colors';
+import { smoothLayout } from '@/config/motion';
+import { makeStyles, useColors } from '@/styles/theme';
+import { gradients } from '@/styles/colors';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms, screen } from '@/styles/scaling';
 import { radius, shadows, spacing } from '@/styles/tokens';
@@ -25,11 +28,14 @@ type Props = {
  * on the screen — everything below it is tonal on purpose.
  */
 export default function PracticeHero({ practice, name, onStart, onViewResults }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const done = practice.completedToday;
   const result = practice.result;
 
   return (
-    <Animated.View layout={LinearTransition.springify().damping(20)}>
+    <Animated.View layout={smoothLayout}>
       <LinearGradient
         colors={
           (done ? gradients.questDone : gradients.questCard) as unknown as [string, string, string]
@@ -57,43 +63,53 @@ export default function PracticeHero({ practice, name, onStart, onViewResults }:
         {done ? (
           <Animated.View key="done" entering={FadeIn.duration(280)} exiting={FadeOut.duration(140)}>
             <View style={styles.tag}>
-              <Icon name="check" size={14} color={colors.surface} strokeWidth={3.2} />
-              <TextComp style={styles.tagText}>Done for today</TextComp>
+              <Icon name="check" size={14} color={colors.onAccent} strokeWidth={3.2} />
+              <TextComp style={styles.tagText}>{t('practiceHero.tagDone')}</TextComp>
             </View>
 
             <View style={styles.mascotDone} pointerEvents="none">
               <Buddy size={112} mood="cheer" float={false} id="hero-done" />
             </View>
 
-            <TextComp style={[styles.title, styles.titleTop]}>Practice complete! 🎉</TextComp>
+            <TextComp style={[styles.title, styles.titleTop]}>
+              {t('practiceHero.complete')}
+            </TextComp>
 
             <Animated.View
               entering={ZoomIn.delay(120).springify().damping(13)}
               style={styles.xpEarned}
             >
               <Icon name="bolt" size={15} color={colors.sunInk} />
-              <TextComp style={styles.xpEarnedText}>+{practice.xpReward} XP earned</TextComp>
+              <TextComp style={styles.xpEarnedText}>
+                {t('practiceHero.xpEarned', { count: practice.xpReward })}
+              </TextComp>
             </Animated.View>
 
             <View style={styles.stats}>
-              <Stat value={`${result?.correct ?? 0}/${result?.total ?? 0}`} label="Correct" />
-              <Stat value={`${result?.accuracy ?? 0}%`} label="Accuracy" />
-              <Stat value={`${Math.round((result?.seconds ?? 0) / 60)}m`} label="Time" />
+              <Stat
+                value={`${result?.correct ?? 0}/${result?.total ?? 0}`}
+                label={t('practiceHero.correct')}
+              />
+              <Stat value={`${result?.accuracy ?? 0}%`} label={t('practiceHero.accuracy')} />
+              <Stat
+                value={`${Math.round((result?.seconds ?? 0) / 60)}m`}
+                label={t('practiceHero.time')}
+              />
             </View>
 
             <ButtonComp variant="white" onPress={onViewResults}>
-              View results
+              {t('practiceHero.viewResults')}
             </ButtonComp>
 
             <TextComp style={styles.footnote} center>
-              Streak extended. Next practice unlocks tomorrow.
+              {t('practiceHero.footnote')}
             </TextComp>
           </Animated.View>
         ) : (
           <Animated.View key="todo" entering={FadeIn.duration(280)} exiting={FadeOut.duration(140)}>
             <View style={styles.tag}>
-              <Icon name="target" size={14} color={colors.surface} strokeWidth={2.6} />
-              <TextComp style={styles.tagText}>{"Today's practice"}</TextComp>
+              <Icon name="target" size={14} color={colors.onAccent} strokeWidth={2.6} />
+              <TextComp style={styles.tagText}>{t('practiceHero.tagTodo')}</TextComp>
             </View>
 
             <View style={styles.mascot} pointerEvents="none">
@@ -103,18 +119,31 @@ export default function PracticeHero({ practice, name, onStart, onViewResults }:
             <View style={styles.copy}>
               <TextComp style={styles.title}>{practice.topic}</TextComp>
               <TextComp style={styles.subtitle}>
-                Picked for your {practice.focusLabel.toLowerCase()} goal, {name}.
+                {t('practiceHero.pickedFor', {
+                  focus: practice.focusLabel.toLowerCase(),
+                  name,
+                })}
               </TextComp>
             </View>
 
             <View style={styles.pills}>
-              <Pill icon="list" label={`${practice.questionCount} questions`} />
-              <Pill icon="clock" label={`~${practice.estimatedMinutes} minutes`} />
-              <Pill icon="bolt" label={`+${practice.xpReward} XP`} highlight />
+              <Pill
+                icon="list"
+                label={t('practiceHero.questions', { count: practice.questionCount })}
+              />
+              <Pill
+                icon="clock"
+                label={t('practiceHero.estimate', { count: practice.estimatedMinutes })}
+              />
+              <Pill
+                icon="bolt"
+                label={t('practiceHero.xp', { count: practice.xpReward })}
+                highlight
+              />
             </View>
 
             <ButtonComp variant="white" icon="play" onPress={onStart}>
-              Start practice
+              {t('practiceHero.start')}
             </ButtonComp>
           </Animated.View>
         )}
@@ -132,7 +161,9 @@ function Pill({
   label: string;
   highlight?: boolean;
 }) {
-  const color = highlight ? colors.sunInk : colors.surface;
+  const styles = useStyles();
+  const colors = useColors();
+  const color = highlight ? colors.sunInk : colors.onAccent;
   return (
     <View style={[styles.pill, highlight ? styles.pillHighlight : null]}>
       <Icon name={icon} size={15} color={color} strokeWidth={2.6} />
@@ -142,6 +173,7 @@ function Pill({
 }
 
 function Stat({ value, label }: { value: string; label: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.stat}>
       <TextComp style={styles.statValue}>{value}</TextComp>
@@ -150,7 +182,7 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   card: {
     borderRadius: radius.hero,
     padding: spacing.xl,
@@ -169,9 +201,10 @@ const styles = StyleSheet.create({
   tagText: {
     fontFamily: fontFamily.black,
     fontSize: ms(11.5),
+    lineHeight: ms(15),
     letterSpacing: 1.1,
     textTransform: 'uppercase',
-    color: colors.surface,
+    color: c.onAccent,
   },
   mascot: {
     position: 'absolute',
@@ -194,7 +227,7 @@ const styles = StyleSheet.create({
     fontSize: ms(26),
     lineHeight: ms(29),
     letterSpacing: -0.6,
-    color: colors.surface,
+    color: c.onAccent,
   },
   titleTop: {
     marginTop: spacing.base,
@@ -221,11 +254,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.14)',
   },
   pillHighlight: {
-    backgroundColor: colors.sun,
+    backgroundColor: c.sun,
   },
   pillText: {
     fontFamily: fontFamily.bold,
     fontSize: ms(13.5),
+    lineHeight: ms(17.6),
     fontVariant: ['tabular-nums'],
   },
   xpEarned: {
@@ -237,12 +271,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: ms(11),
     paddingVertical: ms(7),
     borderRadius: ms(11),
-    backgroundColor: colors.sun,
+    backgroundColor: c.sun,
   },
   xpEarnedText: {
     fontFamily: fontFamily.black,
     fontSize: ms(14),
-    color: colors.sunInk,
+    lineHeight: ms(18.2),
+    color: c.sunInk,
   },
   stats: {
     flexDirection: 'row',
@@ -262,18 +297,21 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: fontFamily.display,
     fontSize: ms(20),
-    color: colors.surface,
+    lineHeight: ms(25.6),
+    color: c.onAccent,
     fontVariant: ['tabular-nums'],
   },
   statLabel: {
     fontFamily: fontFamily.bold,
     fontSize: ms(11.5),
+    lineHeight: ms(15),
     color: '#9FC1C7',
   },
   footnote: {
     fontFamily: fontFamily.medium,
     fontSize: ms(12.5),
+    lineHeight: ms(16.2),
     color: '#9FC1C7',
     marginTop: spacing.md,
   },
-});
+}));

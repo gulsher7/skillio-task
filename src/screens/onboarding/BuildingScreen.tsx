@@ -1,4 +1,5 @@
 import { router } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
@@ -17,17 +18,12 @@ import Icon from '@/components/common/Icon';
 import TextComp from '@/components/common/TextComp';
 import { DEFAULTS } from '@/data/mock';
 import { useAppSelector } from '@/hooks/useRedux';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { spacing } from '@/styles/tokens';
 
-const STEPS = [
-  'Understanding your goals',
-  'Setting your English level',
-  'Creating your daily goal',
-  'Preparing your lessons',
-];
+const STEPS = ['building.step1', 'building.step2', 'building.step3', 'building.step4'];
 
 const STEP_AT = [900, 1800, 2700, 4100];
 const HANDOFF = 5000;
@@ -35,6 +31,9 @@ const HANDOFF = 5000;
 const RING = ms(180);
 
 export default function BuildingScreen() {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const name = useAppSelector((s) => s.onboarding.name.trim() || DEFAULTS.userName);
   const reduced = useReducedMotion();
   const [done, setDone] = useState(0);
@@ -86,7 +85,7 @@ export default function BuildingScreen() {
 
       <View style={styles.copy}>
         <TextComp variant="h1" center style={styles.title}>
-          {complete ? `You're all set, ${name}!` : `Building your learning path, ${name}`}
+          {complete ? t('building.done', { name }) : t('building.title', { name })}
         </TextComp>
         <AnimatedNumber value={percent} suffix="%" duration={700} style={styles.percent} />
       </View>
@@ -105,12 +104,12 @@ export default function BuildingScreen() {
                 ]}
               >
                 {finished ? (
-                  <Icon name="check" size={15} color={colors.surface} strokeWidth={3.4} />
+                  <Icon name="check" size={15} color={colors.onAccent} strokeWidth={3.4} />
                 ) : null}
                 {active ? <Animated.View style={[styles.pulse, dot]} /> : null}
               </View>
               <TextComp style={[styles.stepLabel, finished || active ? styles.stepLabelOn : null]}>
-                {step}
+                {t(step)}
               </TextComp>
             </View>
           );
@@ -120,14 +119,14 @@ export default function BuildingScreen() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: ms(28),
     gap: ms(26),
-    backgroundColor: colors.bg,
+    backgroundColor: c.bg,
   },
   ringWrap: {
     width: RING,
@@ -149,7 +148,8 @@ const styles = StyleSheet.create({
   percent: {
     fontFamily: fontFamily.display,
     fontSize: ms(17),
-    color: colors.ink2,
+    lineHeight: ms(21.8),
+    color: c.ink2,
     textAlign: 'center',
   },
   steps: {
@@ -158,8 +158,8 @@ const styles = StyleSheet.create({
     padding: spacing.card,
     borderRadius: ms(22),
     borderWidth: 1,
-    borderColor: colors.line,
-    backgroundColor: colors.surface,
+    borderColor: c.line,
+    backgroundColor: c.surface,
   },
   step: {
     flexDirection: 'row',
@@ -172,27 +172,28 @@ const styles = StyleSheet.create({
     borderRadius: ms(13),
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: '#E4EEF0',
+    backgroundColor: c.track,
   },
   stepDotDone: {
-    backgroundColor: colors.mint,
+    backgroundColor: c.mint,
   },
   stepDotActive: {
-    backgroundColor: colors.teal100,
+    backgroundColor: c.teal100,
   },
   pulse: {
     width: ms(10),
     height: ms(10),
     borderRadius: ms(5),
-    backgroundColor: colors.teal,
+    backgroundColor: c.teal,
   },
   stepLabel: {
     flex: 1,
     fontFamily: fontFamily.bold,
     fontSize: ms(15.5),
-    color: colors.ink3,
+    lineHeight: ms(20.2),
+    color: c.ink3,
   },
   stepLabelOn: {
-    color: colors.ink,
+    color: c.ink,
   },
-});
+}));

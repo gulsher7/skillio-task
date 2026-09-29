@@ -3,7 +3,8 @@ import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { SvgXml } from 'react-native-svg';
 
 import TextComp from '@/components/common/TextComp';
-import { colors } from '@/styles/colors';
+import { makeStyles } from '@/styles/theme';
+
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { initialsOf, svgFromDataUri } from '@/utils/svg';
@@ -18,6 +19,7 @@ type Props = {
 };
 
 export default function Avatar({ uri, name, size = 46, online, style }: Props) {
+  const styles = useStyles();
   const box = ms(size);
   const xml = useMemo(() => svgFromDataUri(uri), [uri]);
 
@@ -37,17 +39,17 @@ export default function Avatar({ uri, name, size = 46, online, style }: Props) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   clip: {
     ...StyleSheet.absoluteFill,
     overflow: 'hidden',
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.teal100,
+    backgroundColor: c.teal100,
   },
   initials: {
     fontFamily: fontFamily.display,
-    color: colors.teal700,
+    color: c.teal700,
   },
   dot: {
     position: 'absolute',
@@ -55,8 +57,8 @@ const styles = StyleSheet.create({
     bottom: -1,
     width: ms(12),
     height: ms(12),
-    backgroundColor: colors.mint,
+    backgroundColor: c.mint,
     borderWidth: 2,
-    borderColor: colors.surface,
+    borderColor: c.surface,
   },
-});
+}));

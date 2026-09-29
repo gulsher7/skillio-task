@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View, type LayoutChangeEvent } from 'react-native';
+import { useTranslation } from 'react-i18next';
+import { View, type LayoutChangeEvent } from 'react-native';
 import Animated, {
   interpolateColor,
   useAnimatedProps,
@@ -20,7 +21,7 @@ import TextComp from '@/components/common/TextComp';
 import { duration, timing } from '@/config/motion';
 import { DEFAULTS } from '@/data/mock';
 import type { Cefr, HomeData } from '@/models/home';
-import { colors } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { spacing } from '@/styles/tokens';
@@ -38,6 +39,8 @@ const AnimatedPath = Animated.createAnimatedComponent(Path);
 const LADDER: Cefr[] = ['A1', 'A2', 'B1', 'B2', 'C1', 'C2'];
 const MILESTONES = [25, 50, 75];
 const TRAVELLER = ms(30);
+const MILESTONE = ms(13);
+const MILESTONE_HALF = MILESTONE / 2;
 
 type Props = {
   progress: HomeData['progress'];
@@ -53,6 +56,9 @@ type Props = {
  * say any of that.
  */
 export default function JourneyCard({ progress, avatarUrl, name, inView, highlightKey }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const [scale, setScale] = useState(0);
 
   const target = progress.overallProgressPercent;
@@ -86,13 +92,20 @@ export default function JourneyCard({ progress, avatarUrl, name, inView, highlig
 
   return (
     <Card highlightKey={highlightKey}>
-      <SectionHeader title="Your journey" trailing={<TextComp variant="eyebrow">CEFR</TextComp>} />
+      <SectionHeader
+        title={t('journey.title')}
+        trailing={<TextComp variant="eyebrow">{t('journey.cefr')}</TextComp>}
+      />
 
       <View
         onLayout={onSvgLayout}
         style={styles.canvas}
         accessibilityRole="progressbar"
-        accessibilityLabel={`${progress.currentCefrLevel} to ${progress.nextCefrLevel}, ${target} percent complete`}
+        accessibilityLabel={t('journey.a11y', {
+          from: progress.currentCefrLevel,
+          to: progress.nextCefrLevel,
+          percent: target,
+        })}
         accessibilityValue={{ min: 0, max: 100, now: target }}
       >
         <Svg
@@ -107,11 +120,17 @@ export default function JourneyCard({ progress, avatarUrl, name, inView, highlig
             </LinearGradient>
           </Defs>
 
-          <Path d={JOURNEY_D} fill="none" stroke="#EAF2F3" strokeWidth={14} strokeLinecap="round" />
           <Path
             d={JOURNEY_D}
             fill="none"
-            stroke="#FFFFFF"
+            stroke={colors.track}
+            strokeWidth={14}
+            strokeLinecap="round"
+          />
+          <Path
+            d={JOURNEY_D}
+            fill="none"
+            stroke={colors.surface}
             strokeWidth={2}
             strokeDasharray="2 9"
             strokeLinecap="round"
@@ -126,14 +145,21 @@ export default function JourneyCard({ progress, avatarUrl, name, inView, highlig
             animatedProps={road}
           />
 
-          <Circle cx={40} cy={92} r={27} fill={colors.teal} stroke="#FFFFFF" strokeWidth={4} />
+          <Circle
+            cx={40}
+            cy={92}
+            r={27}
+            fill={colors.teal}
+            stroke={colors.surface}
+            strokeWidth={4}
+          />
           <SvgText
             x={40}
             y={99}
             textAnchor="middle"
             fontFamily={fontFamily.display}
             fontSize={21}
-            fill="#FFFFFF"
+            fill={colors.onAccent}
           >
             {progress.currentCefrLevel}
           </SvgText>
@@ -142,7 +168,7 @@ export default function JourneyCard({ progress, avatarUrl, name, inView, highlig
             cx={286}
             cy={44}
             r={29}
-            fill="#FFFFFF"
+            fill={colors.surface}
             stroke={colors.mint}
             strokeWidth={3.5}
             strokeDasharray="5 4"
@@ -189,11 +215,11 @@ export default function JourneyCard({ progress, avatarUrl, name, inView, highlig
             style={styles.big}
           />
           <TextComp variant="small" style={styles.legendLabel}>
-            Overall progress to {progress.nextCefrLevel}
+            {t('journey.overall', { level: progress.nextCefrLevel })}
           </TextComp>
         </View>
         <Chip
-          label={DEFAULTS.weeksToNextLevel}
+          label={t('journey.weeksToGo', { count: DEFAULTS.weeksToNextLevel })}
           icon="flag"
           size="sm"
           color={colors.mintInk}
@@ -221,17 +247,19 @@ export default function JourneyCard({ progress, avatarUrl, name, inView, highlig
 }
 
 function Milestone({ at, ride, scale }: { at: number; ride: SharedValue<number>; scale: number }) {
+  const styles = useStyles();
+  const colors = useColors();
   const point = journeyPointAt(at);
 
   const dot = useAnimatedStyle(() => {
     const passed = ride.get() >= at ? 1 : 0;
     return {
       transform: [
-        { translateX: point.x * scale - ms(6.5) },
-        { translateY: point.y * scale - ms(6.5) },
+        { translateX: point.x * scale - MILESTONE_HALF },
+        { translateY: point.y * scale - MILESTONE_HALF },
       ],
-      backgroundColor: interpolateColor(passed, [0, 1], ['#EAF2F3', '#FFFFFF']),
-      borderColor: interpolateColor(passed, [0, 1], ['#D3E2E5', colors.teal]),
+      backgroundColor: interpolateColor(passed, [0, 1], [colors.track, colors.surface]),
+      borderColor: interpolateColor(passed, [0, 1], [colors.trackLine, colors.teal]),
       opacity: scale > 0 ? 1 : 0,
     };
   });
@@ -239,7 +267,7 @@ function Milestone({ at, ride, scale }: { at: number; ride: SharedValue<number>;
   return <Animated.View style={[styles.milestone, dot]} pointerEvents="none" />;
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   canvas: {
     width: '100%',
   },
@@ -247,9 +275,9 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 0,
-    width: ms(13),
-    height: ms(13),
-    borderRadius: ms(6.5),
+    width: MILESTONE,
+    height: MILESTONE,
+    borderRadius: MILESTONE_HALF,
     borderWidth: 3,
   },
   traveller: {
@@ -259,7 +287,7 @@ const styles = StyleSheet.create({
     width: TRAVELLER,
     height: TRAVELLER,
     borderRadius: TRAVELLER / 2,
-    backgroundColor: colors.surface,
+    backgroundColor: c.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -269,14 +297,14 @@ const styles = StyleSheet.create({
     paddingHorizontal: ms(8),
     paddingVertical: ms(3),
     borderRadius: ms(9),
-    backgroundColor: colors.ink,
+    backgroundColor: c.inkSurface,
   },
   travellerTagText: {
     width: ms(34),
     fontFamily: fontFamily.display,
     fontSize: ms(12),
     lineHeight: ms(15),
-    color: colors.surface,
+    color: c.onInkSurface,
     textAlign: 'center',
   },
   legend: {
@@ -292,12 +320,13 @@ const styles = StyleSheet.create({
   big: {
     fontFamily: fontFamily.display,
     fontSize: ms(36),
+    lineHeight: ms(46.1),
     letterSpacing: -1,
-    color: colors.ink,
+    color: c.ink,
   },
   legendLabel: {
     marginTop: ms(2),
-    color: colors.ink2,
+    color: c.ink2,
   },
   ladder: {
     flexDirection: 'row',
@@ -309,24 +338,25 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontFamily: fontFamily.display,
     fontSize: ms(12.5),
+    lineHeight: ms(16),
     paddingVertical: ms(6),
     borderRadius: ms(9),
     overflow: 'hidden',
-    backgroundColor: colors.bg,
-    color: '#A8BBBF',
+    backgroundColor: c.bg,
+    color: c.ink3,
   },
   rungPast: {
-    backgroundColor: colors.teal50,
-    color: colors.teal700,
+    backgroundColor: c.teal50,
+    color: c.teal700,
   },
   rungCurrent: {
-    backgroundColor: colors.teal,
-    color: colors.surface,
+    backgroundColor: c.teal,
+    color: c.onInkSurface,
   },
   rungNext: {
-    backgroundColor: colors.surface,
-    color: colors.ink,
+    backgroundColor: c.surface,
+    color: c.ink,
     borderWidth: 2,
-    borderColor: colors.teal,
+    borderColor: c.teal,
   },
-});
+}));

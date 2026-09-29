@@ -1,5 +1,6 @@
-import { StyleSheet, View } from 'react-native';
-import Animated, { FadeIn, FadeOut, LinearTransition } from 'react-native-reanimated';
+import { useTranslation } from 'react-i18next';
+import { View } from 'react-native';
+import Animated, { FadeIn, FadeOut } from 'react-native-reanimated';
 import Svg, { Circle, Path, Rect } from 'react-native-svg';
 
 import Avatar from '@/components/brand/Avatar';
@@ -10,13 +11,15 @@ import HintCard from '@/components/common/HintCard';
 import SectionHeader from '@/components/common/SectionHeader';
 import TextComp from '@/components/common/TextComp';
 import { teacherByName } from '@/data/avatars';
+import { useDayLabel } from '@/hooks/useDayLabel';
 import { useNow } from '@/hooks/useNow';
 import type { HomeData } from '@/models/home';
-import { colors } from '@/styles/colors';
+import { smoothLayout } from '@/config/motion';
+import { makeStyles, useColors } from '@/styles/theme';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
-import { dayLabel, formatTime } from '@/utils/date';
+import { formatTime, monthShort, weekdayShort } from '@/utils/date';
 
 /** A class counts as joinable from its start until 50 minutes in. */
 const LIVE_WINDOW_MIN = 50;
@@ -30,21 +33,27 @@ type Props = {
 };
 
 function Countdown({ startsAt }: { startsAt: Date }) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const now = useNow();
   const minutes = (startsAt.getTime() - now) / 60000;
 
   if (minutes > 0 && minutes < 24 * 60) {
     const label =
       minutes >= 60
-        ? `Starts in ${Math.floor(minutes / 60)}h ${String(Math.floor(minutes % 60)).padStart(2, '0')}m`
-        : `Starts in ${Math.ceil(minutes)} min`;
+        ? t('class.startsInHours', {
+            hours: Math.floor(minutes / 60),
+            minutes: String(Math.floor(minutes % 60)).padStart(2, '0'),
+          })
+        : t('class.startsInMinutes', { count: Math.ceil(minutes) });
     return <Chip label={label} icon="clock" size="sm" />;
   }
 
   if (minutes <= 0 && minutes > -LIVE_WINDOW_MIN) {
     return (
       <Chip
-        label="Live now"
+        label={t('class.liveNow')}
         size="sm"
         color="#C22C50"
         background={colors.berry50}
@@ -63,12 +72,15 @@ export default function ClassCard({
   onBook,
   highlightKey,
 }: Props) {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const noPlan = !subscription.tier;
   const noLessons = !!subscription.tier && subscription.lessonsRemaining === 0;
 
   return (
     <Card highlightKey={highlightKey}>
-      <Animated.View layout={LinearTransition.springify().damping(20)}>
+      <Animated.View layout={smoothLayout}>
         {scheduledClass ? (
           <ScheduledBody scheduledClass={scheduledClass} onJoin={onJoin} />
         ) : (
@@ -80,23 +92,21 @@ export default function ClassCard({
             <View style={styles.emptyRow}>
               <CalendarPlusArt />
               <View style={styles.emptyCopy}>
-                <TextComp variant="title">No class scheduled</TextComp>
+                <TextComp variant="title">{t('class.emptyTitle')}</TextComp>
                 <TextComp variant="small" style={styles.emptyText}>
-                  Ready for your next lesson? Book a live class with a teacher.
+                  {t('class.emptyBody')}
                 </TextComp>
               </View>
             </View>
 
             {noPlan || noLessons ? (
               <HintCard background={colors.bg} color={colors.ink2} icon="info" style={styles.note}>
-                {noPlan
-                  ? 'Live classes come with a Skillio plan.'
-                  : '0 lessons left. Top up to book your next class.'}
+                {noPlan ? t('class.noPlanNote') : t('class.noLessonsNote')}
               </HintCard>
             ) : null}
 
             <ButtonComp variant="tonal" icon="calendarPlus" onPress={onBook} style={styles.cta}>
-              Book a class
+              {t('class.book')}
             </ButtonComp>
           </Animated.View>
         )}
@@ -112,22 +122,21 @@ function ScheduledBody({
   scheduledClass: NonNullable<HomeData['scheduledClass']>;
   onJoin: () => void;
 }) {
+  const styles = useStyles();
+  const { t, i18n } = useTranslation();
+  const dayLabel = useDayLabel();
   const startsAt = new Date(scheduledClass.time);
   const teacher = teacherByName(scheduledClass.teacher);
 
   return (
     <Animated.View key="scheduled" entering={FadeIn.duration(260)} exiting={FadeOut.duration(140)}>
-      <SectionHeader title="Your next class" trailing={<Countdown startsAt={startsAt} />} />
+      <SectionHeader title={t('class.title')} trailing={<Countdown startsAt={startsAt} />} />
 
       <View style={styles.row}>
         <View style={styles.dateBlock}>
-          <TextComp style={styles.dateMonth}>
-            {startsAt.toLocaleDateString('en-US', { month: 'short' })}
-          </TextComp>
+          <TextComp style={styles.dateMonth}>{monthShort(startsAt, i18n.language)}</TextComp>
           <TextComp style={styles.dateDay}>{startsAt.getDate()}</TextComp>
-          <TextComp style={styles.dateWeekday}>
-            {startsAt.toLocaleDateString('en-US', { weekday: 'short' })}
-          </TextComp>
+          <TextComp style={styles.dateWeekday}>{weekdayShort(startsAt, i18n.language)}</TextComp>
         </View>
 
         <View style={styles.info}>
@@ -145,13 +154,14 @@ function ScheduledBody({
       </View>
 
       <ButtonComp variant="tonal" icon="video" onPress={onJoin} style={styles.cta}>
-        Join class
+        {t('class.join')}
       </ButtonComp>
     </Animated.View>
   );
 }
 
 function CalendarPlusArt() {
+  const colors = useColors();
   const box = ms(72);
   return (
     <Svg width={box} height={box} viewBox="0 0 72 72">
@@ -166,7 +176,7 @@ function CalendarPlusArt() {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   row: {
     flexDirection: 'row',
     gap: spacing.base,
@@ -177,26 +187,28 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: ms(10),
     borderRadius: radius.button,
-    backgroundColor: colors.teal50,
+    backgroundColor: c.teal50,
   },
   dateMonth: {
     fontFamily: fontFamily.black,
     fontSize: ms(11),
+    lineHeight: ms(14.3),
     letterSpacing: 1.1,
     textTransform: 'uppercase',
-    color: colors.teal700,
+    color: c.teal700,
   },
   dateDay: {
     fontFamily: fontFamily.display,
     fontSize: ms(28),
-    lineHeight: ms(30),
-    color: colors.ink,
+    lineHeight: ms(34),
+    color: c.ink,
     fontVariant: ['tabular-nums'],
   },
   dateWeekday: {
     fontFamily: fontFamily.black,
     fontSize: ms(12),
-    color: colors.teal700,
+    lineHeight: ms(15.6),
+    color: c.teal700,
   },
   info: {
     flex: 1,
@@ -206,7 +218,8 @@ const styles = StyleSheet.create({
   when: {
     fontFamily: fontFamily.black,
     fontSize: ms(15),
-    color: colors.ink,
+    lineHeight: ms(19.5),
+    color: c.ink,
   },
   teacher: {
     flexDirection: 'row',
@@ -219,13 +232,14 @@ const styles = StyleSheet.create({
   teacherName: {
     fontFamily: fontFamily.bold,
     fontSize: ms(15),
-    color: colors.ink,
+    lineHeight: ms(19.5),
+    color: c.ink,
   },
   liveDot: {
     width: ms(7),
     height: ms(7),
     borderRadius: ms(3.5),
-    backgroundColor: '#C22C50',
+    backgroundColor: c.berryInk,
   },
   emptyRow: {
     flexDirection: 'row',
@@ -245,4 +259,4 @@ const styles = StyleSheet.create({
   cta: {
     marginTop: spacing.base,
   },
-});
+}));

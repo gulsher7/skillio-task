@@ -1,74 +1,79 @@
 import type { SkillKey } from '@/models/home';
 
 export type Question = {
+  id: string;
   skill: SkillKey;
-  /** Two parts means a fill-in-the-gap prompt; one part is a plain question. */
-  prompt: [string] | [string, string];
+  /** A gap-fill prompt has a second half; a plain question does not. */
+  gapFill: boolean;
   answers: string[];
   correct: number;
-  why: string;
 };
 
+/**
+ * Prompts and explanations live in `src/lang` under `practice.q1…q10`; the
+ * answers are the English being taught, so they never get translated.
+ */
 const RAW: Question[] = [
   {
+    id: 'q1',
     skill: 'grammar',
-    prompt: ["I'm really looking forward", 'you this weekend.'],
+    gapFill: true,
     answers: ['to seeing', 'to see', 'seeing', 'for seeing'],
     correct: 0,
-    why: '"Look forward to" is followed by the -ing form.',
   },
   {
+    id: 'q2',
     skill: 'vocabulary',
-    prompt: ['Which word means "extremely tired"?'],
+    gapFill: false,
     answers: ['exhausted', 'excited', 'anxious', 'amazed'],
     correct: 0,
-    why: '"Exhausted" is a stronger way to say very tired.',
   },
   {
+    id: 'q3',
     skill: 'speaking',
-    prompt: ['Could you', 'me up from the station at six?'],
+    gapFill: true,
     answers: ['pick', 'take', 'get', 'bring'],
     correct: 0,
-    why: '"Pick someone up" means to collect them.',
   },
   {
+    id: 'q4',
     skill: 'grammar',
-    prompt: ['She', 'in London since 2019.'],
+    gapFill: true,
     answers: ['has lived', 'lives', 'is living', 'lived'],
     correct: 0,
-    why: 'Use the present perfect with "since" for something still true.',
   },
   {
+    id: 'q5',
     skill: 'speaking',
-    prompt: ['Your friend says "Thanks so much!" The most natural reply is…'],
+    gapFill: false,
     answers: ['No worries!', 'Yes, thanks.', 'It is nothing matter.', 'You are welcome for.'],
     correct: 0,
-    why: '"No worries!" is a friendly, natural reply.',
   },
   {
+    id: 'q6',
     skill: 'vocabulary',
-    prompt: ['Choose the opposite of "generous".'],
+    gapFill: false,
     answers: ['stingy', 'kind', 'wealthy', 'honest'],
     correct: 0,
-    why: 'A stingy person does not like to share.',
   },
   {
+    id: 'q7',
     skill: 'pronunciation',
-    prompt: ['Which word has a silent letter?'],
+    gapFill: false,
     answers: ['knife', 'kitten', 'kettle', 'kind'],
     correct: 0,
-    why: 'The "k" in knife is silent: /naɪf/.',
   },
   {
+    id: 'q8',
     skill: 'grammar',
-    prompt: ['If I', 'more time, I would travel more.'],
+    gapFill: true,
     answers: ['had', 'have', 'will have', 'would have'],
     correct: 0,
-    why: 'The second conditional uses the past simple after "if".',
   },
   {
+    id: 'q9',
     skill: 'vocabulary',
-    prompt: ['"To break the ice" means to…'],
+    gapFill: false,
     answers: [
       'start a friendly conversation',
       'feel very cold',
@@ -76,14 +81,13 @@ const RAW: Question[] = [
       'make a mistake',
     ],
     correct: 0,
-    why: 'It means making people feel relaxed at first.',
   },
   {
+    id: 'q10',
     skill: 'pronunciation',
-    prompt: ['Where is the stress in "photographer"?'],
+    gapFill: false,
     answers: ['pho-TOG-ra-pher', 'PHO-to-gra-pher', 'pho-to-GRA-pher', 'pho-to-gra-PHER'],
     correct: 0,
-    why: 'The stress falls on the second syllable: pho-TOG-ra-pher.',
   },
 ];
 
@@ -101,11 +105,11 @@ const SHUFFLE = [
   [2, 1, 0, 3],
 ];
 
-export const QUESTIONS: Question[] = RAW.map((q, i) => {
+export const QUESTIONS: Question[] = RAW.map((question, i) => {
   const order = SHUFFLE[i];
   return {
-    ...q,
-    answers: order.map((j) => q.answers[j]),
-    correct: order.indexOf(q.correct),
+    ...question,
+    answers: order.map((j) => question.answers[j]),
+    correct: order.indexOf(question.correct),
   };
 });

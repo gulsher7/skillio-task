@@ -1,10 +1,11 @@
 import { StyleSheet, View } from 'react-native';
 
-import { colors } from '@/styles/colors';
+import { useColors } from '@/styles/theme';
 import { ms } from '@/styles/scaling';
 
 /** Five rising bars; `level` (0-4) sets how many are lit. */
 export default function SignalBars({ level }: { level: number }) {
+  const colors = useColors();
   return (
     <View style={styles.row}>
       {[0, 1, 2, 3, 4].map((i) => (
@@ -12,7 +13,7 @@ export default function SignalBars({ level }: { level: number }) {
           key={i}
           style={[
             styles.bar,
-            { height: ms(6 + i * 4), backgroundColor: i <= level ? colors.teal : '#D5E4E7' },
+            { height: ms(6 + i * 4), backgroundColor: i <= level ? colors.teal : colors.trackLine },
           ]}
         />
       ))}

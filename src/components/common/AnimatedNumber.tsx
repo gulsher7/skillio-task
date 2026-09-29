@@ -1,8 +1,9 @@
-import { StyleSheet, TextInput, type StyleProp, type TextStyle } from 'react-native';
+import { TextInput, type StyleProp, type TextStyle } from 'react-native';
 import Animated, { useAnimatedProps } from 'react-native-reanimated';
 
 import { useCountUp } from '@/hooks/useCountUp';
-import { colors } from '@/styles/colors';
+import { makeStyles } from '@/styles/theme';
+
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 
@@ -47,6 +48,7 @@ export default function AnimatedNumber({
   grouped,
   style,
 }: Props) {
+  const styles = useStyles();
   const count = useCountUp(value, { from, delay, duration, run });
 
   const animatedProps = useAnimatedProps(() => {
@@ -68,14 +70,15 @@ export default function AnimatedNumber({
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   base: {
     padding: 0,
     margin: 0,
     fontFamily: fontFamily.display,
     fontSize: ms(20),
-    color: colors.ink,
+    lineHeight: ms(25.6),
+    color: c.ink,
     fontVariant: ['tabular-nums'],
     includeFontPadding: false,
   },
-});
+}));

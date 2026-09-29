@@ -2,10 +2,10 @@ import { Canvas, Rect, RadialGradient, vec } from '@shopify/react-native-skia';
 import { router } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect, useRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import Animated, {
   Easing,
-  FadeInDown,
   useAnimatedStyle,
   useSharedValue,
   withDelay,
@@ -22,10 +22,11 @@ import ButtonComp from '@/components/common/ButtonComp';
 import Icon from '@/components/common/Icon';
 import TextComp from '@/components/common/TextComp';
 import Confetti, { type ConfettiHandle } from '@/components/fx/Confetti';
-import { duration, springPop, STAGGER } from '@/config/motion';
+import { duration, enterDown, springPop, STAGGER } from '@/config/motion';
 import { DEFAULTS, SAMPLE_RESULT } from '@/data/mock';
 import { useAppSelector } from '@/hooks/useRedux';
-import { colors, gradients } from '@/styles/colors';
+import { makeStyles, useColors } from '@/styles/theme';
+import { gradients } from '@/styles/colors';
 import { fontFamily } from '@/styles/fontFamily';
 import { ms } from '@/styles/scaling';
 import { radius, spacing } from '@/styles/tokens';
@@ -34,6 +35,9 @@ import { formatDuration } from '@/utils/date';
 const XP = DEFAULTS.practice.xpReward;
 
 export default function CelebrateScreen() {
+  const styles = useStyles();
+  const colors = useColors();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const { width, height } = useWindowDimensions();
   const result = useAppSelector((s) => s.home.result) ?? SAMPLE_RESULT;
@@ -96,21 +100,13 @@ export default function CelebrateScreen() {
           <Buddy size={150} mood="cheer" float={false} id="celebrate" />
         </Animated.View>
 
-        <Animated.View
-          entering={FadeInDown.delay(STAGGER * 2)
-            .springify()
-            .damping(18)}
-        >
+        <Animated.View entering={enterDown(STAGGER * 2)}>
           <TextComp variant="h1" center style={styles.title}>
-            Practice complete! 🎉
+            {t('celebrate.title')}
           </TextComp>
         </Animated.View>
 
-        <Animated.View
-          entering={FadeInDown.delay(STAGGER * 3)
-            .springify()
-            .damping(18)}
-        >
+        <Animated.View entering={enterDown(STAGGER * 3)}>
           <AnimatedNumber
             value={XP}
             prefix="+"
@@ -120,33 +116,23 @@ export default function CelebrateScreen() {
           />
         </Animated.View>
 
-        <Animated.View
-          entering={FadeInDown.delay(STAGGER * 4)
-            .springify()
-            .damping(18)}
-          style={styles.streak}
-        >
+        <Animated.View entering={enterDown(STAGGER * 4)} style={styles.streak}>
           <Animated.View style={[styles.flame, flamePop]}>
-            <Icon name="flame" size={22} color={colors.surface} />
+            <Icon name="flame" size={22} color={colors.onAccent} />
           </Animated.View>
-          <TextComp style={styles.streakText}>{streak} day streak! Your flame is growing.</TextComp>
+          <TextComp style={styles.streakText}>{t('celebrate.streak', { count: streak })}</TextComp>
         </Animated.View>
 
-        <Animated.View
-          entering={FadeInDown.delay(STAGGER * 5)
-            .springify()
-            .damping(18)}
-          style={styles.stats}
-        >
-          <Stat value={`${result.correct}/${result.total}`} label="Correct" />
-          <Stat value={`${result.accuracy}%`} label="Accuracy" />
-          <Stat value={formatDuration(result.seconds).split(' ')[0]} label="Time" />
+        <Animated.View entering={enterDown(STAGGER * 5)} style={styles.stats}>
+          <Stat value={`${result.correct}/${result.total}`} label={t('celebrate.correct')} />
+          <Stat value={`${result.accuracy}%`} label={t('celebrate.accuracy')} />
+          <Stat value={formatDuration(result.seconds).split(' ')[0]} label={t('celebrate.time')} />
         </Animated.View>
       </View>
 
       <View style={[styles.footer, { paddingBottom: insets.bottom + spacing.xxl }]}>
         <ButtonComp variant="white" onPress={() => router.back()}>
-          Continue
+          {t('celebrate.continue')}
         </ButtonComp>
       </View>
 
@@ -156,6 +142,7 @@ export default function CelebrateScreen() {
 }
 
 function Stat({ value, label }: { value: string; label: string }) {
+  const styles = useStyles();
   return (
     <View style={styles.stat}>
       <TextComp style={styles.statValue}>{value}</TextComp>
@@ -164,7 +151,7 @@ function Stat({ value, label }: { value: string; label: string }) {
   );
 }
 
-const styles = StyleSheet.create({
+const useStyles = makeStyles((c) => ({
   root: {
     flex: 1,
     backgroundColor: '#07808D',
@@ -179,14 +166,14 @@ const styles = StyleSheet.create({
   title: {
     fontSize: ms(32),
     lineHeight: ms(36),
-    color: colors.surface,
+    color: c.onAccent,
   },
   xp: {
     fontFamily: fontFamily.display,
     fontSize: ms(64),
-    lineHeight: ms(70),
+    lineHeight: ms(77),
     letterSpacing: -2,
-    color: colors.sun,
+    color: c.sun,
     textAlign: 'center',
   },
   streak: {
@@ -205,13 +192,14 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.flame,
+    backgroundColor: c.flame,
   },
   streakText: {
     flexShrink: 1,
     fontFamily: fontFamily.black,
     fontSize: ms(14.5),
-    color: colors.surface,
+    lineHeight: ms(18.9),
+    color: c.onAccent,
   },
   stats: {
     flexDirection: 'row',
@@ -230,15 +218,17 @@ const styles = StyleSheet.create({
   statValue: {
     fontFamily: fontFamily.display,
     fontSize: ms(22),
-    color: colors.surface,
+    lineHeight: ms(28.2),
+    color: c.onAccent,
     fontVariant: ['tabular-nums'],
   },
   statLabel: {
     fontFamily: fontFamily.bold,
     fontSize: ms(12),
+    lineHeight: ms(15.6),
     color: 'rgba(255,255,255,0.8)',
   },
   footer: {
     paddingHorizontal: spacing.xxl,
   },
-});
+}));
