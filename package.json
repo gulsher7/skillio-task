@@ -55,7 +55,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "lint": "expo lint"
+    "lint": "expo lint",
+    "apk": "./scripts/release-apk.sh"
   },
   "private": true
 }

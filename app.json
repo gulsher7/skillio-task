@@ -48,7 +48,8 @@
         {
           "microphonePermission": "Skillio uses the microphone to listen to you read aloud, so it can score your pronunciation."
         }
-      ]
+      ],
+      "./plugins/withReleaseSigning"
     ],
     "experiments": {
       "typedRoutes": true,

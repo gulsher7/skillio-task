@@ -1,3 +1,4 @@
+import { SHOW_DEMO_PANEL } from '@/config/flags';
 import { router, usePathname } from 'expo-router';
 import { useEffect, useState } from 'react';
 import { ScrollView, View } from 'react-native';
@@ -66,7 +67,7 @@ export default function DemoPanel() {
 
   useEffect(() => onDemoPanelOpen(() => setOpen(true)), []);
 
-  if (!__DEV__ || !open) return null;
+  if (!SHOW_DEMO_PANEL || !open) return null;
 
   const goHome = () => {
     if (pathname !== '/home') router.replace('/home');

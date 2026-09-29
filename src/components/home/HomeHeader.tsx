@@ -1,3 +1,4 @@
+import { SHOW_DEMO_PANEL } from '@/config/flags';
 import { BlurView } from 'expo-blur';
 import { useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -124,7 +125,7 @@ export default function HomeHeader({
         <PressableScale
           haptic="none"
           scaleTo={0.94}
-          onLongPress={__DEV__ ? openDemoPanel : undefined}
+          onLongPress={SHOW_DEMO_PANEL ? openDemoPanel : undefined}
           delayLongPress={600}
           accessible={false}
         >

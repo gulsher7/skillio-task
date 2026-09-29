@@ -44,3 +44,10 @@ example
 
 SKILLIO_BUILD_SPEC.md
 firebase-debug.log
+
+# release signing + build artefacts — never commit these
+credentials/
+build/
+*.apk
+*.aab
+*.keystore
